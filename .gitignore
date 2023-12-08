@@ -27,6 +27,7 @@
 # *.v
 
 # ignore Quartus II generated files
+*.sld
 *_generation_script*
 *_inst.vhd
 *.bak
