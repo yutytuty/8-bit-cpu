@@ -13,7 +13,7 @@ entity reg8 is
 end entity;
 
 architecture reg8_arch of reg8 is
-  signal data : std_logic_vector(7 downto 0);
+  signal data : std_logic_vector(7 downto 0) := "00000011";
 begin
   process (clk)
   begin
