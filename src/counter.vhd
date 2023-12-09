@@ -16,7 +16,9 @@ begin
     if rst = '1' then
       value <= "00";
     else
-      value <= value + 1;
+      if rising_edge(clk) then
+        value <= value + 1;
+      end if;
     end if;
     o <= value;
   end process;

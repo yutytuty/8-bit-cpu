@@ -4,42 +4,79 @@ library ieee;
 
 entity control_unit is
   port (
-    inst                                   : in  std_logic_vector(10 downto 0);
-    counter                                : in  std_logic_vector(1 downto 0);
-    ar_load, br_load, counter_rst, add_sub : out std_logic;
-    data_bus_selector_sel                  : out std_logic_vector(2 downto 0));
+    inst                  : in  std_logic_vector(10 downto 0);
+    counter               : in  std_logic_vector(1 downto 0);
+    no_reg                : out std_logic; -- means no register is getting input
+    reg_decoder_sel       : out std_logic_vector(2 downto 0);
+    add_sub               : out std_logic;
+    data_bus_selector_sel : out std_logic_vector(2 downto 0);
+    done                  : out std_logic);
 end entity;
 
-architecture data_bus_selector_arch of control_unit is
+architecture control_unit_arch of control_unit is
 begin
   process (inst, counter)
   begin
     case inst(10 downto 7) is
       when "0000" =>
+        -- data_bus_sel <= reg_b, reg_decoder <= None
+        -- reg_decoder <= reg_a
         if counter = "00" then
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
           data_bus_selector_sel <= inst(2 downto 0);
-          ar_load <= '0';
-          br_load <= '0';
+          done <= '0';
         elsif counter = "01" then
-          if inst(5 downto 3) = "000" then
-            ar_load <= '1';
-            br_load <= '0';
-          elsif inst(5 downto 3) = "001" then
-            ar_load <= '0';
-            br_load <= '1';
-          end if;
+          no_reg <= '0';
+          reg_decoder_sel <= inst(5 downto 3);
+          add_sub <= '0';
+          data_bus_selector_sel <= inst(2 downto 0);
+          done <= '1';
+        else
+          no_reg <= '0';
+          reg_decoder_sel <= inst(5 downto 3);
+          add_sub <= '0';
+          data_bus_selector_sel <= inst(2 downto 0);
+          done <= '1';
         end if;
       when "0001" =>
-        -- ar <= reg_a, add_sub <= '0'
-        -- data_bus <= reg_b, data_bus_selector_sel <= '1'
-        -- 
         if counter = "00" then
-
+          -- data_bus <= reg_b
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          data_bus_selector_sel <= inst(2 downto 0);
+          done <= '0';
+        elsif counter = "01" then
+          no_reg <= '0';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          data_bus_selector_sel <= "111"; -- alu (for now)
+          done <= '1';
+        else
+        end if;
+      when "0010" =>
+        if counter = "00" then
+          no_reg <= '1';
+          reg_Decoder_sel <= "000";
+          add_sub <= '0';
+          data_bus_selector_sel <= inst(2 downto 0);
+          done <= '0';
+        elsif counter = "01" then
+          no_reg <= '0';
+          reg_Decoder_sel <= "000";
+          add_sub <= '1';
+          data_bus_selector_sel <= "111"; -- alu (for now)
+          done <= '1';
+        else
         end if;
       when others =>
-        ar_load <= '0';
-        br_load <= '0';
+        no_reg <= '1';
+        reg_decoder_sel <= "000";
+        add_sub <= '0';
         data_bus_selector_sel <= "000";
+        done <= '1';
     end case;
   end process;
 end architecture;
