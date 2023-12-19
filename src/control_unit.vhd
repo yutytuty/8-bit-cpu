@@ -6,10 +6,16 @@ entity control_unit is
   port (
     inst                  : in  std_logic_vector(10 downto 0);
     counter               : in  std_logic_vector(1 downto 0);
+    -- registers
     no_reg                : out std_logic; -- means no register is getting input
     reg_decoder_sel       : out std_logic_vector(2 downto 0);
+    reg_selector_sel      : out std_logic_vector(2 downto 0);
+    data_bus_selector_sel : out std_logic_vector(1 downto 0);
+    -- alu
     add_sub               : out std_logic;
-    data_bus_selector_sel : out std_logic_vector(2 downto 0);
+    -- memory
+    ram_load              : out std_logic;
+    -- control unit
     done                  : out std_logic);
 end entity;
 
@@ -25,19 +31,25 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= inst(2 downto 0);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
           done <= '0';
         elsif counter = "01" then
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3);
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
-          done <= '1';
+          reg_selector_sel <= inst(2 downto 0);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '0';
         else
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3);
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= inst(2 downto 0);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
           done <= '1';
         end if;
       when "0001" =>
@@ -46,46 +58,117 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= inst(2 downto 0);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
           done <= '0';
         elsif counter = "01" then
-          no_reg <= '0';
+          -- alu_in <= reg_a
+          no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
-          data_bus_selector_sel <= "111"; -- alu (for now)
-          done <= '1';
+          reg_selector_sel <= inst(5 downto 3);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '0';
         else
+          -- data_bus <= acc
           no_reg <= '0';
-          reg_decoder_sel <= inst(5 downto 3);
+          reg_decoder_sel <= inst(5 downto 3); -- reg_a
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= inst(5 downto 3); -- reg_a
+          data_bus_selector_sel <= "01";
+          ram_load <= '0';
           done <= '1';
         end if;
       when "0010" =>
         if counter = "00" then
+          -- data_bus <= reg_b
           no_reg <= '1';
-          reg_Decoder_sel <= "000";
+          reg_decoder_sel <= "000";
+          add_sub <= '1';
+          reg_selector_sel <= inst(2 downto 0);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '0';
+        elsif counter = "01" then
+          -- alu_in <= reg_a
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '1';
+          reg_selector_sel <= inst(5 downto 3);
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '0';
+        else
+          -- data_bus <= acc
+          no_reg <= '0';
+          reg_decoder_sel <= inst(5 downto 3); -- reg_a
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= inst(5 downto 3); -- reg_a
+          data_bus_selector_sel <= "01";
+          ram_load <= '0';
+          done <= '1';
+        end if;
+      when "0110" => -- LD
+        if counter = "00" then
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          reg_selector_sel <= "000";
+          data_bus_selector_sel <= "10"; -- mem
+          ram_load <= '0';
           done <= '0';
         elsif counter = "01" then
           no_reg <= '0';
-          reg_Decoder_sel <= "000";
-          add_sub <= '1';
-          data_bus_selector_sel <= "111"; -- alu (for now)
+          reg_decoder_sel <= inst(5 downto 3); -- reg_a
+          add_sub <= '0';
+          reg_selector_sel <= "000";
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
           done <= '1';
         else
-          no_reg <= '0';
-          reg_decoder_sel <= inst(5 downto 3);
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
           add_sub <= '0';
-          data_bus_selector_sel <= inst(2 downto 0);
+          reg_selector_sel <= "000";
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '1';
+        end if;
+      when "1000" => -- STO
+        if counter = "00" then
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          reg_selector_sel <= inst(5 downto 3); -- reg_a
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
+          done <= '0';
+        elsif counter = "01" then
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          reg_selector_sel <= inst(5 downto 3); -- reg_a
+          data_bus_selector_sel <= "00";
+          ram_load <= '1';
+          done <= '1';
+        else
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          reg_selector_sel <= "000";
+          data_bus_selector_sel <= "00";
+          ram_load <= '0';
           done <= '1';
         end if;
       when others =>
         no_reg <= '1';
         reg_decoder_sel <= "000";
         add_sub <= '0';
-        data_bus_selector_sel <= "000";
+        reg_selector_sel <= "000";
+        data_bus_selector_sel <= "00";
+        ram_load <= '0';
         done <= '1';
     end case;
   end process;
