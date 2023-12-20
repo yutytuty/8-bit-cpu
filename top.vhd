@@ -65,6 +65,7 @@ architecture top_arch of top is
       data_bus_selector_sel : out std_logic_vector(1 downto 0);
       -- alu
       add_sub               : out std_logic;
+      alu_selector_sel      : out std_logic_vector(2 downto 0);
       -- memory
       ram_load              : out std_logic;
       -- control unit
@@ -129,8 +130,10 @@ architecture top_arch of top is
   signal data_bus_selector_sel : std_logic_vector(1 downto 0);
 
   -- alu
-  signal add_sub : std_logic;
-  signal alu_o   : std_logic_vector(7 downto 0);
+  signal add_sub        : std_logic;
+  signal alu_o          : std_logic_vector(7 downto 0);
+  signal alu_reg_sel    : std_logic_vector(2 downto 0);
+  signal alu_selector_o : std_logic_vector(7 downto 0);
 
   -- rom
   signal rom_o : std_logic_vector(7 downto 0);
@@ -154,6 +157,9 @@ architecture top_arch of top is
 
   -- addr bus
   signal addr_bus : std_logic_vector(15 downto 0);
+
+  -- tmp signals
+  signal tmp_1, tmp_2 : std_logic;
 begin
   c_REG_DECODER: reg_decoder
     port map (
@@ -165,8 +171,8 @@ begin
       o(3)   => dr_load,
       o(4)   => ha_load,
       o(5)   => la_load,
-      o(6)   => open, -- tmp
-      o(7)   => open -- tmp
+      o(6)   => tmp_1, -- tmp
+      o(7)   => tmp_2 -- tmp
     );
 
   c_AR: reg8
@@ -223,9 +229,21 @@ begin
       o     => la_out
     );
 
+  c_ALU_REG_SELECTOR: reg_selector
+    port map (
+      ar  => ar_out,
+      br  => br_out,
+      cr  => cr_out,
+      dr  => dr_out,
+      ha  => ha_out,
+      la  => la_out,
+      sel => alu_reg_sel,
+      o   => alu_selector_o
+    );
+
   c_ALU: alu
     port map (
-      a       => ar_out,
+      a       => alu_selector_o,
       b       => data_bus,
       add_sub => add_sub,
       o       => alu_o
@@ -302,6 +320,7 @@ begin
       reg_decoder_sel       => reg_decoder_sel,
       data_bus_selector_sel => data_bus_selector_sel,
       add_sub               => add_sub,
+      alu_selector_sel      => alu_reg_sel,
       ram_load              => ram_load,
       done                  => counter_rst
     );

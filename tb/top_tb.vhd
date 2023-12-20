@@ -31,14 +31,53 @@ begin
 
   process
   begin
+    -- Fibonacci sequence
+    -- add ar, br  :  00010000001
+    -- mov cr, br  :  00000010001
+    -- mov br, ar  :  00000001000
+    -- mov ar, cr  :  00000000010
     rst <= '0';
-    wait for 2 ns;
-    rst <= '0';
-    inst <= "00010000001"; -- add ra, rb
     wait for 4 ns;
-    inst <= "00000001000"; -- mov rb, ra 
+    inst <= "00010000001";
+    wait for 6 ns;
+    inst <= "00000010001";
     wait for 4 ns;
-    inst <= "00000000000"; -- mov ra, ra
+    inst <= "00000001000";
+    wait for 4 ns;
+    inst <= "00000000010";
+    wait for 4 ns;
+    inst <= "00010000001";
+    wait for 6 ns;
+    inst <= "00000010001";
+    wait for 4 ns;
+    inst <= "00000001000";
+    wait for 4 ns;
+    inst <= "00000000010";
+    wait for 4 ns;
+    inst <= "00010000001";
+    wait for 6 ns;
+    inst <= "00000010001";
+    wait for 4 ns;
+    inst <= "00000001000";
+    wait for 4 ns;
+    inst <= "00000000010";
+    wait for 4 ns;
+    inst <= "00010000001";
+    wait for 6 ns;
+    inst <= "00000010001";
+    wait for 4 ns;
+    inst <= "00000001000";
+    wait for 4 ns;
+    inst <= "00000000010";
+    wait for 4 ns;
+    inst <= "00010000001";
+    wait for 6 ns;
+    inst <= "00000010001";
+    wait for 4 ns;
+    inst <= "00000001000";
+    wait for 4 ns;
+    inst <= "00000000010";
+    wait for 4 ns;
     wait;
   end process;
 end architecture;

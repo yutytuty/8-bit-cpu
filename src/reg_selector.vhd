@@ -16,10 +16,10 @@ begin
     case sel is
       when "000" => o <= ar;
       when "001" => o <= br;
-      when "011" => o <= cr;
-      when "100" => o <= dr;
-      when "101" => o <= ha;
-      when "110" => o <= la;
+      when "010" => o <= cr;
+      when "011" => o <= dr;
+      when "100" => o <= ha;
+      when "101" => o <= la;
       when others => o <= "00000000";
     end case;
   end process;

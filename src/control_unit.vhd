@@ -13,6 +13,7 @@ entity control_unit is
     data_bus_selector_sel : out std_logic_vector(1 downto 0);
     -- alu
     add_sub               : out std_logic;
+    alu_selector_sel      : out std_logic_vector(2 downto 0);
     -- memory
     ram_load              : out std_logic;
     -- control unit
@@ -31,6 +32,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(2 downto 0);
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -39,14 +41,16 @@ begin
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3);
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(2 downto 0);
           data_bus_selector_sel <= "00";
           ram_load <= '0';
-          done <= '0';
+          done <= '1';
         else
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3);
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(2 downto 0);
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -58,8 +62,9 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
-          reg_selector_sel <= inst(2 downto 0);
-          data_bus_selector_sel <= "00";
+          alu_selector_sel <= "000";
+          reg_selector_sel <= inst(5 downto 3); -- VV
+          data_bus_selector_sel <= "00"; -- data_bus <= reg_a
           ram_load <= '0';
           done <= '0';
         elsif counter = "01" then
@@ -67,17 +72,30 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
-          reg_selector_sel <= inst(5 downto 3);
-          data_bus_selector_sel <= "00";
+          alu_selector_sel <= inst(2 downto 0); -- alu_in <= reg_b
+          reg_selector_sel <= inst(5 downto 3); -- VV
+          data_bus_selector_sel <= "00"; -- data_bus <= reg_a
           ram_load <= '0';
           done <= '0';
-        else
+          -- alu_out <= reg_a + reg_b
+          -- acc <= alu_out
+        elsif counter = "10" then
           -- data_bus <= acc
           no_reg <= '0';
-          reg_decoder_sel <= inst(5 downto 3); -- reg_a
+          reg_decoder_sel <= inst(5 downto 3); -- reg_a <= data_bus
           add_sub <= '0';
-          reg_selector_sel <= inst(5 downto 3); -- reg_a
+          alu_selector_sel <= inst(2 downto 0); -- alu_in <= reg_b
+          reg_selector_sel <= inst(5 downto 3);
           data_bus_selector_sel <= "01";
+          ram_load <= '0';
+          done <= '1';
+        else
+          no_reg <= '1';
+          reg_decoder_sel <= "000";
+          add_sub <= '0';
+          alu_selector_sel <= "000";
+          reg_selector_sel <= "000";
+          data_bus_selector_sel <= "00";
           ram_load <= '0';
           done <= '1';
         end if;
@@ -87,6 +105,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '1';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(2 downto 0);
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -96,6 +115,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '1';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(5 downto 3);
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -105,6 +125,7 @@ begin
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3); -- reg_a
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(5 downto 3); -- reg_a
           data_bus_selector_sel <= "01";
           ram_load <= '0';
@@ -115,6 +136,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= "000";
           data_bus_selector_sel <= "10"; -- mem
           ram_load <= '0';
@@ -123,6 +145,7 @@ begin
           no_reg <= '0';
           reg_decoder_sel <= inst(5 downto 3); -- reg_a
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= "000";
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -131,6 +154,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= "000";
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -141,6 +165,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(5 downto 3); -- reg_a
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -149,6 +174,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= inst(5 downto 3); -- reg_a
           data_bus_selector_sel <= "00";
           ram_load <= '1';
@@ -157,6 +183,7 @@ begin
           no_reg <= '1';
           reg_decoder_sel <= "000";
           add_sub <= '0';
+          alu_selector_sel <= "000";
           reg_selector_sel <= "000";
           data_bus_selector_sel <= "00";
           ram_load <= '0';
@@ -165,7 +192,8 @@ begin
       when others =>
         no_reg <= '1';
         reg_decoder_sel <= "000";
-        add_sub <= '0';
+        add_sub <= '1';
+        alu_selector_sel <= "000";
         reg_selector_sel <= "000";
         data_bus_selector_sel <= "00";
         ram_load <= '0';
