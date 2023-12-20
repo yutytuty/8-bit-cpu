@@ -147,7 +147,7 @@ begin
           add_sub <= '0';
           alu_selector_sel <= "000";
           reg_selector_sel <= "000";
-          data_bus_selector_sel <= "00";
+          data_bus_selector_sel <= "10";
           ram_load <= '0';
           done <= '1';
         else
