@@ -122,6 +122,11 @@ architecture top_arch of top is
   signal la_load : std_logic;
   signal la_out  : std_logic_vector(7 downto 0);
 
+  -- PC
+  signal pc_rst  : std_logic;
+  signal pc_load : std_logic;
+  signal pc_out  : std_logic_vector(15 downto 0);
+
   -- Counter
   signal counter_rst : std_logic;
   signal counter_o   : std_logic_vector(1 downto 0);

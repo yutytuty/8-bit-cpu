@@ -12,18 +12,19 @@ entity ram is
 end entity;
 
 architecture ram_arch of ram is
-  type ram_array is array (0 to 32767) of std_logic_vector(7 downto 0);
+  type ram_array is array (0 to 32767) of std_logic;
 
-  signal mem : ram_array;
+  signal mem : std_logic_vector(0 downto 32767);
 begin
   process (addr_bus, load, input)
   begin
     if (to_integer(unsigned(addr_bus)) > 127) then
-      o <= mem(to_integer(unsigned(addr_bus)) - 128); -- in code, ram comes after rom.
+      -- in code, ram comes after rom.
+      o <= mem(to_integer(unsigned(addr_bus)) - 121 downto to_integer(unsigned(addr_bus)) - 128);
     end if;
 
     if load = '1' then
-      mem(to_integer(unsigned(addr_bus) - 128)) <= input; -- same as above
+      mem(to_integer(unsigned(addr_bus)) - 121 downto to_integer(unsigned(addr_bus)) - 128) <= input;
     end if;
   end process;
 end architecture;
