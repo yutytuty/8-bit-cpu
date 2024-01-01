@@ -12,11 +12,11 @@ end entity;
 
 architecture mem_selector_arch of mem_selector is
 begin
-  process (rom, ram, ram, addr_bus)
+  process (rom, ram, addr_bus)
   begin
-    if to_integer(unsigned(addr_bus)) < 128 then
+    if to_integer(unsigned(addr_bus)) < 32768 and 0 <= to_integer(unsigned(addr_bus)) then
       o <= rom;
-    elsif to_integer(unsigned(addr_bus)) > 128 then
+    elsif to_integer(unsigned(addr_bus)) >= 32768 and to_integer(unsigned(addr_bus)) < 65536 then
       o <= ram;
     else
       o <= rom;
