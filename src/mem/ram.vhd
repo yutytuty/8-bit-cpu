@@ -19,18 +19,25 @@ architecture ram_arch of ram is
   subtype word_t is std_logic_vector((RAM_WIDTH - 1) downto 0);
   type memory_t is array (0 to RAM_HEIGHT - 1) of word_t;
 
-  signal ram      : memory_t := (others => x"00");
+  signal ram      : memory_t := (
+    -- some example values
+    0      => x"01",
+    1      => x"A0",
+    2      => x"55",
+    3      => x"AA",
+    others => x"00"
+  );
   signal addr_reg : natural range 0 to 2 ** RAM_WIDTH - 1;
 begin
 
   process (clk)
   begin
     if rising_edge(clk) then
-      if we = '1' then
-        ram(to_integer(unsigned(addr))) <= input;
-      end if;
-
       if to_integer(unsigned(addr)) >= RAM_START and to_integer(unsigned(addr)) < RAM_START + RAM_HEIGHT then
+        if we = '1' then
+          ram(to_integer(unsigned(addr))) <= input;
+        end if;
+
         addr_reg <= to_integer(unsigned(addr)) - RAM_START;
       end if;
     end if;

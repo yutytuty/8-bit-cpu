@@ -4,7 +4,6 @@ library ieee;
   use ieee.numeric_std.all;
 
 entity rom is
-
   port (
     clk  : in  std_logic;
     addr : in  std_logic_vector(15 downto 0);
