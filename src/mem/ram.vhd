@@ -13,10 +13,10 @@ entity ram is
 end entity;
 
 architecture ram_arch of ram is
-  type ram_array is array (0 to 1000) of std_logic_vector(7 downto 0);
+  type ram_array is array (0 to 32767) of std_logic_vector(7 downto 0);
 
-  signal en       : std_logic := '0';
-  signal ram      : ram_array := (others => x"00");
+  signal en  : std_logic := '0';
+  signal ram : ram_array := (others => x"00");
   -- signal addr_reg : std_logic_vector(15 downto 0) := x"0000";
 begin
 
@@ -28,7 +28,8 @@ begin
       en <= '0';
     end if;
   end process;
-  p_read_write: process (clk)
+
+  p_read_write: process (clk, load)
   begin
     if rising_edge(clk) then
       if en = '1' then
@@ -36,7 +37,7 @@ begin
           ram(to_integer(unsigned(addr_bus)) - 32768) <= input;
         end if;
       end if;
+      o <= ram(to_integer(unsigned(addr_bus)) - 32768);
     end if;
-    o <= ram(to_integer(unsigned(addr_bus)) - 32768);
   end process;
 end architecture;

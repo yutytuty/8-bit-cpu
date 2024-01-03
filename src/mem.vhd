@@ -5,7 +5,6 @@ library ieee;
 entity mem is
   port (
     clk      : in  std_logic;
-    rst      : in  std_logic;
     addr_bus : in  std_logic_vector(15 downto 0);
     ram_load : in  std_logic;
     input    : in  std_logic_vector(7 downto 0);
@@ -23,7 +22,6 @@ architecture mem_arch of mem is
   component ram is
     port (
       clk      : in  std_logic;
-      rst      : in  std_logic;
       addr_bus : in  std_logic_vector(15 downto 0);
       load     : in  std_logic;
       input    : in  std_logic_vector(7 downto 0);
@@ -50,7 +48,6 @@ begin
   c_RAM: ram
     port map (
       clk      => clk,
-      rst      => rst,
       addr_bus => addr_bus,
       load     => ram_load,
       input    => input,
