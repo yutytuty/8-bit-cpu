@@ -5,7 +5,7 @@ library ieee;
 entity data_bus_selector is
   port (
     reg, alu, mem : in  std_logic_vector(7 downto 0);
-    sel           : in  std_logic_vector(1 downto 0);
+    sel           : in  natural range 0 to 2;
     o             : out std_logic_vector(7 downto 0));
 end entity;
 
@@ -14,9 +14,9 @@ begin
   process (reg, alu, mem, sel)
   begin
     case sel is
-      when "00" => o <= reg;
-      when "01" => o <= alu;
-      when "10" => o <= mem;
+      when 0 => o <= reg;
+      when 1 => o <= alu;
+      when 2 => o <= mem;
       when others => o <= "00000000";
     end case;
   end process;
