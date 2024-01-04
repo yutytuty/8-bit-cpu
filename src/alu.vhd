@@ -4,20 +4,17 @@ library ieee;
 
 entity alu is
   port (
-    a       : in  std_logic_vector(7 downto 0);
-    b       : in  std_logic_vector(7 downto 0);
-    add_sub : in  std_logic; -- add = 0 sub = 1
-    o       : out std_logic_vector(7 downto 0));
+    a    : in  std_logic_vector(15 downto 0);
+    b    : in  std_logic_vector(15 downto 0);
+    func : in  natural range 0 to 10;
+    o    : out std_logic_vector(15 downto 0));
 end entity;
 
 architecture alu_arch of alu is
 begin
-  process (a, b, add_sub)
-  begin
-    if add_sub = '0' then
-      o <= a + b;
-    else
-      o <= a - b;
-    end if;
-  end process;
+  o <= a + b   when func = 0 else
+       a and b when func = 1 else
+       a or b  when func = 2 else
+       not a   when func = 3 else
+       a;
 end architecture;
