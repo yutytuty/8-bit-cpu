@@ -8,8 +8,8 @@ entity mem is
     clk      : in  std_logic;
     addr_bus : in  std_logic_vector(15 downto 0);
     ram_load : in  std_logic;
-    input    : in  std_logic_vector(7 downto 0);
-    o        : out std_logic_vector(7 downto 0));
+    input    : in  std_logic_vector(15 downto 0);
+    o        : out std_logic_vector(15 downto 0));
 end entity;
 
 architecture mem_arch of mem is
@@ -17,7 +17,7 @@ architecture mem_arch of mem is
     port (
       clk  : in  std_logic;
       addr : in  std_logic_vector(15 downto 0);
-      o    : out std_logic_vector(7 downto 0));
+      o    : out std_logic_vector(15 downto 0));
   end component;
 
   component ram is
@@ -25,11 +25,11 @@ architecture mem_arch of mem is
       clk   : in  std_logic;
       addr  : in  std_logic_vector(15 downto 0);
       we    : in  std_logic;
-      input : in  std_logic_vector(7 downto 0);
-      o     : out std_logic_vector(7 downto 0));
+      input : in  std_logic_vector(15 downto 0);
+      o     : out std_logic_vector(15 downto 0));
   end component;
 
-  signal rom_out, ram_out : std_logic_vector(7 downto 0);
+  signal rom_out, ram_out : std_logic_vector(15 downto 0);
 begin
   c_ROM: rom
     port map (
@@ -49,9 +49,10 @@ begin
 
   process (addr_bus, ram_out, rom_out)
   begin
-    if to_integer(unsigned(addr_bus)) >= 0 and to_integer(unsigned(addr_bus)) < 32768 then
+    -- 65535 and 32767 because 2 words are fetched at a time
+    if to_integer(unsigned(addr_bus)) >= 0 and to_integer(unsigned(addr_bus)) < 32767 then
       o <= rom_out;
-    elsif to_integer(unsigned(addr_bus)) >= 32768 and to_integer(unsigned(addr_bus)) < 65536 then
+    elsif to_integer(unsigned(addr_bus)) >= 32768 and to_integer(unsigned(addr_bus)) < 65535 then
       o <= ram_out;
     else
       o <= (others => '0');
