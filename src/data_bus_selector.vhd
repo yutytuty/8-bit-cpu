@@ -4,9 +4,9 @@ library ieee;
 
 entity data_bus_selector is
   port (
-    reg, alu, mem : in  std_logic_vector(7 downto 0);
+    reg, alu, mem : in  std_logic_vector(15 downto 0);
     sel           : in  natural range 0 to 2;
-    o             : out std_logic_vector(7 downto 0));
+    o             : out std_logic_vector(15 downto 0));
 end entity;
 
 architecture data_bus_selector_arch of data_bus_selector is
