@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE22F17C6
-set_global_assignment -name TOP_LEVEL_ENTITY control_unit
+set_global_assignment -name TOP_LEVEL_ENTITY pcu
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 22.1STD.2
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "21:16:12  JANUARY 03, 2024"
 set_global_assignment -name LAST_QUARTUS_VERSION "22.1std.2 Lite Edition"
@@ -60,6 +60,10 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name FLOW_ENABLE_RTL_VIEWER ON
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
+set_global_assignment -name VHDL_FILE src/pcu.vhd
+set_global_assignment -name VHDL_FILE src/pcu/program_mem.vhd
+set_global_assignment -name VHDL_FILE src/pcu/pc_reg.vhd
+set_global_assignment -name VHDL_FILE src/pcu/pc_adder.vhd
 set_global_assignment -name VHDL_FILE src/control_unit.vhd
 set_global_assignment -name VHDL_FILE src/alu.vhd
 set_global_assignment -name VHDL_FILE src/reg/reg.vhd
