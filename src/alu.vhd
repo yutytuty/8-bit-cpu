@@ -12,10 +12,11 @@ end entity;
 
 architecture alu_arch of alu is
 begin
-  o <= a + b   when func = 0 else
-       a - b   when func = 1 else
-       a and b when func = 2 else
-       a or b  when func = 3 else
-       not a   when func = 4 else
+  o <= b       when func = 0 else
+       a + b   when func = 1 else
+       a - b   when func = 2 else
+       a and b when func = 3 else
+       a or b  when func = 4 else
+       not a   when func = 5 else
        a;
 end architecture;
