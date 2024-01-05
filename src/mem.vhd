@@ -49,10 +49,9 @@ begin
 
   process (addr_bus, ram_out, rom_out)
   begin
-    -- 65535 and 32767 because 2 words are fetched at a time
-    if to_integer(unsigned(addr_bus)) >= 0 and to_integer(unsigned(addr_bus)) < 32767 then
+    if to_integer(unsigned(addr_bus)) >= 0 and to_integer(unsigned(addr_bus)) < 32768 then
       o <= rom_out;
-    elsif to_integer(unsigned(addr_bus)) >= 32768 and to_integer(unsigned(addr_bus)) < 65535 then
+    elsif to_integer(unsigned(addr_bus)) >= 32768 and to_integer(unsigned(addr_bus)) < 65536 then
       o <= ram_out;
     else
       o <= (others => '0');
