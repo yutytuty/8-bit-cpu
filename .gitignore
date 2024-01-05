@@ -68,3 +68,6 @@ incremental_db/
 db/
 _output_files/
 PLLJ_PLLSPE_INFO.txt
+
+simulation/
+8-bit-cpu_nativelink_simulation.rpt
