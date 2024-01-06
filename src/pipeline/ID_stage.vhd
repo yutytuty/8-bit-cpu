@@ -41,8 +41,16 @@ begin
     end if;
   end process;
 
-  inst_was_I_type <= '1' when inst_type = T_I_TYPE else
-                     '0';
+  p_was_I_type: process (clk)
+  begin
+    if rising_edge(clk) then
+      if inst_type = T_I_TYPE then
+        inst_was_I_type <= '1';
+      else
+        inst_was_I_type <= '0';
+      end if;
+    end if;
+  end process;
 
   p_operand_fetch: process (inst_type, ir)
   begin
