@@ -4,12 +4,14 @@ library ieee;
 
 entity pc_adder is
   port (
-    input            : in  std_logic_vector(15 downto 0);
-    o                : out std_logic_vector(15 downto 0));
+    input : in  std_logic_vector(15 downto 0);
+    inc_2 : in  std_logic;
+    o     : out std_logic_vector(15 downto 0));
 end entity;
 
 architecture pc_adder_arch of pc_adder is
-  constant INSTRUCTION_SIZE : natural := 16;
 begin
-  o <= input + INSTRUCTION_SIZE;
+  o <= input + 1 when inc_2 = '0' else
+       input + 2 when inc_2 = '1' else
+       input + 1;
 end architecture;

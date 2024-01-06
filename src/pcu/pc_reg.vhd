@@ -11,7 +11,7 @@ entity pc_reg is
 end entity;
 
 architecture pc_reg_arch of pc_reg is
-  signal data : std_logic_vector(15 downto 0);
+  signal data : std_logic_vector(15 downto 0) := (others => '0');
 begin
   process (clk)
   begin
