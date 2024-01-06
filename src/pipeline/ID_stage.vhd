@@ -5,22 +5,24 @@ library ieee;
 
 entity ID_stage is
   port (
-    clk              : in  std_logic;
-    ir               : in  std_logic_vector(15 downto 0);
-    extra_8          : in  std_logic_vector(7 downto 0);
-    reg1             : in  std_logic_vector(15 downto 0);
-    reg2             : in  std_logic_vector(15 downto 0);
+    clk                     : in  std_logic;
+    ir                      : in  std_logic_vector(15 downto 0);
+    extra_8                 : in  std_logic_vector(7 downto 0);
+    reg1                    : in  std_logic_vector(15 downto 0);
+    reg2                    : in  std_logic_vector(15 downto 0);
     -- outputs for reg file
-    reg1_sel         : out natural range 0 to 7;
-    reg2_sel         : out natural range 0 to 7;
+    reg1_sel                : out natural range 0 to 7;
+    reg2_sel                : out natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type  : out std_logic;
+    inst_was_I_type         : out std_logic;
     -- outputs for EX stage
-    operand1         : out std_logic_vector(15 downto 0);
-    operand2         : out std_logic_vector(15 downto 0);
-    operand_forward1 : out std_logic;
-    operand_forward2 : out std_logic;
-    alu_func         : out natural range 0 to 15);
+    operand1                : out std_logic_vector(15 downto 0);
+    operand2                : out std_logic_vector(15 downto 0);
+    operand_forward1        : out std_logic;
+    operand_forward2        : out std_logic;
+    double_operand_forward1 : out std_logic;
+    double_operand_forward2 : out std_logic;
+    alu_func                : out natural range 0 to 15);
 end entity;
 
 architecture ID_stage_arch of ID_stage is
