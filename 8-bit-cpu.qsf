@@ -60,12 +60,13 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name FLOW_ENABLE_RTL_VIEWER ON
 set_global_assignment -name TIMING_ANALYZER_MULTICORNER_ANALYSIS ON
+set_global_assignment -name SDC_FILE "8-bit-cpu.out.sdc"
+set_global_assignment -name VHDL_FILE src/pipeline/ID_stage.vhd
 set_global_assignment -name VHDL_FILE src/pipeline/IF_stage.vhd
 set_global_assignment -name VHDL_FILE src/pcu.vhd
 set_global_assignment -name VHDL_FILE src/pcu/program_mem.vhd
 set_global_assignment -name VHDL_FILE src/pcu/pc_reg.vhd
 set_global_assignment -name VHDL_FILE src/pcu/pc_adder.vhd
-set_global_assignment -name VHDL_FILE src/control_unit.vhd
 set_global_assignment -name VHDL_FILE src/alu.vhd
 set_global_assignment -name VHDL_FILE src/reg/reg.vhd
 set_global_assignment -name VHDL_FILE src/reg_file.vhd
