@@ -20,7 +20,7 @@ architecture reg_file_arch of reg_file is
     port (
       clk   : in  std_logic;
       rst   : in  std_logic;
-      we  : in  std_logic; -- write enabled
+      we    : in  std_logic; -- write enabled
       input : in  std_logic_vector(15 downto 0);
       o     : out std_logic_vector(15 downto 0)
     );
@@ -40,7 +40,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(0),
-      we  => internal_we(0),
+      we    => internal_we(0),
       input => input,
       o     => ar_o1
     );
@@ -48,7 +48,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(1),
-      we  => internal_we(1),
+      we    => internal_we(1),
       input => input,
       o     => br_o1
     );
@@ -56,7 +56,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(2),
-      we  => internal_we(2),
+      we    => internal_we(2),
       input => input,
       o     => cr_o1
     );
@@ -64,7 +64,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(3),
-      we  => internal_we(3),
+      we    => internal_we(3),
       input => input,
       o     => dr_o1
     );
@@ -72,7 +72,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(4),
-      we  => internal_we(4),
+      we    => internal_we(4),
       input => input,
       o     => ha_o1
     );
@@ -80,7 +80,7 @@ begin
     port map (
       clk   => clk,
       rst   => rst(5),
-      we  => internal_we(5),
+      we    => internal_we(5),
       input => input,
       o     => la_o1
     );
