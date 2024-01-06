@@ -6,7 +6,7 @@ entity alu is
   port (
     a    : in  std_logic_vector(15 downto 0);
     b    : in  std_logic_vector(15 downto 0);
-    func : in  natural range 0 to 10;
+    func : in  natural range 0 to 15;
     o    : out std_logic_vector(15 downto 0));
 end entity;
 
@@ -17,6 +17,7 @@ begin
        a - b   when func = 2 else
        a and b when func = 3 else
        a or b  when func = 4 else
-       not a   when func = 5 else
+       a xor b when func = 5 else
+       not a   when func = 6 else
        a;
 end architecture;
