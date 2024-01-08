@@ -1,6 +1,7 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
+  use ieee.numeric_std.all;
 
 entity top is
   port (
@@ -10,7 +11,7 @@ end entity;
 
 architecture top_arch of top is
   signal reg1_out, reg2_out : std_logic_vector(15 downto 0);
-  signal reg1_sel, reg2_sel : natural range 0 to 15;
+  signal reg1_sel, reg2_sel : natural range 0 to 7;
 
   component pipeline is
     port (
@@ -48,12 +49,12 @@ begin
   c_REG_FILE: reg_file
     port map (
       clk      => clk,
-      rst      => (others => rst),
+      rst      =>(others => rst),
       we       => '0',
       we_sel   => 0,
       reg_sel1 => reg1_sel,
       reg_sel2 => reg2_sel,
-      input    => (others => '0'),
+      input    =>(others => '0'),
       o1       => reg1_out,
       o2       => reg2_out
     );
