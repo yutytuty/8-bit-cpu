@@ -6,7 +6,7 @@ entity reg is
   port (
     clk   : in  std_logic;
     rst   : in  std_logic;
-    we  : in  std_logic;
+    we    : in  std_logic;
     input : in  std_logic_vector(15 downto 0);
     o     : out std_logic_vector(15 downto 0)
   );
