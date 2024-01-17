@@ -19,14 +19,14 @@ architecture program_mem_arch of program_mem is
   type mem_t is array (0 to 1023) of word_t;
 
   signal mem : mem_t := (
-    0 => x"0011",
-    1 => x"2233",
-    2 => x"4455",
-    3 => x"6677",
-    4 => x"8899",
-    5 => x"AABB",
-    6 => x"CCDD",
-    7 => x"EEFF",
+    0      => "0001000011110000",
+    1      => "1111000000010000",
+    2      => "0000111100001111",
+    -- 3      => x"6677",
+    -- 4      => x"8899",
+    -- 5      => x"AABB",
+    -- 6      => x"CCDD",
+    -- 7      => x"EEFF",
     others => x"0000"
   );
 begin

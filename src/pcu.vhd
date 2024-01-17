@@ -53,7 +53,7 @@ begin
 
   process (clk, inc_1andhalf)
   begin
-    if rising_edge(clk) then
+    if falling_edge(clk) then
       backward_pointer <= backward_pointer xor inc_1andhalf;
     end if;
   end process;
@@ -66,9 +66,10 @@ begin
       o     => pc_out
     );
 
-              adder_inc_2 <= inc_1andhalf and backward_pointer;
+  adder_inc_2 <= inc_1andhalf and backward_pointer;
+
   c_PC_ADDER: pc_adder
-      port map (
+    port map (
       input => pc_out,
       inc_2 => adder_inc_2,
       o     => pc_adder_out

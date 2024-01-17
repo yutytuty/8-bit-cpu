@@ -14,7 +14,7 @@ entity ID_stage is
     reg1_sel                : out natural range 0 to 7;
     reg2_sel                : out natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type         : out std_logic;
+    inst_was_I_type         : out std_logic := '0';
     -- outputs for EX stage
     operand1                : out std_logic_vector(15 downto 0);
     operand2                : out std_logic_vector(15 downto 0);
@@ -43,14 +43,12 @@ begin
     end if;
   end process;
 
-  p_was_I_type: process (clk)
+  process (inst_type)
   begin
-    if rising_edge(clk) then
-      if inst_type = T_I_TYPE then
-        inst_was_I_type <= '1';
-      else
-        inst_was_I_type <= '0';
-      end if;
+    if inst_type = T_I_TYPE then
+      inst_was_I_type <= '1';
+    else
+      inst_was_I_type <= '0';
     end if;
   end process;
 
