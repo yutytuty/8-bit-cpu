@@ -67,7 +67,6 @@ architecture pipeline_arch of pipeline is
 
   component WB_stage is
     port (
-      clk                : in  std_logic;
       reg_write_sel      : in  natural range 0 to 7;
       we                 : in  std_logic;
       input              : in  std_logic_vector(15 downto 0);
@@ -136,7 +135,6 @@ begin
 
   c_WB_stage: WB_stage
     port map (
-      clk                => clk,
       reg_write_sel      => ex_wb_reg,
       we                 => ex_wb_we,
       input              => ex_out,
