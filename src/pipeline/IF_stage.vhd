@@ -8,8 +8,8 @@ entity IF_stage is
     rst                 : in  std_logic;
     -- increment pc by 1.5 instead of 1. Set if previous was I-type instruction (by ID stage).
     previous_was_i_type : in  std_logic;
-    inst                : out std_logic_vector(15 downto 0);
-    extra_8             : out std_logic_vector(7 downto 0));
+    inst                : out std_logic_vector(15 downto 0) := (others => '0');
+    extra_8             : out std_logic_vector(7 downto 0)  := (others => '0'));
 end entity;
 
 architecture IF_stage_arch of IF_Stage is

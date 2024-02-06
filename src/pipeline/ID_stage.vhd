@@ -5,30 +5,32 @@ library ieee;
 
 entity ID_stage is
   port (
-    clk                     : in  std_logic;
-    ir                      : in  std_logic_vector(15 downto 0);
-    extra_8                 : in  std_logic_vector(7 downto 0);
-    reg1                    : in  std_logic_vector(15 downto 0);
-    reg2                    : in  std_logic_vector(15 downto 0);
+    clk              : in  std_logic;
+    ir               : in  std_logic_vector(15 downto 0);
+    extra_8          : in  std_logic_vector(7 downto 0);
+    reg1             : in  std_logic_vector(15 downto 0);
+    reg2             : in  std_logic_vector(15 downto 0);
     -- outputs for reg file
-    reg1_sel                : out natural range 0 to 7;
-    reg2_sel                : out natural range 0 to 7;
+    reg1_sel         : out natural range 0 to 7;
+    reg2_sel         : out natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type         : out std_logic := '0';
+    inst_was_I_type  : out std_logic := '0';
     -- outputs for EX stage
-    operand1                : out std_logic_vector(15 downto 0);
-    operand2                : out std_logic_vector(15 downto 0);
-    operand_forward1        : out std_logic;
-    operand_forward2        : out std_logic;
-    double_operand_forward1 : out std_logic;
-    double_operand_forward2 : out std_logic;
-    alu_func                : out natural range 0 to 15);
+    operand1         : out std_logic_vector(15 downto 0);
+    operand2         : out std_logic_vector(15 downto 0);
+    operand_forward1 : out std_logic;
+    operand_forward2 : out std_logic;
+    alu_func         : out natural range 0 to 15;
+    -- outputs for WB stage
+    wb_reg           : out natural range 0 to 7;
+    wb_we            : out std_logic := '0');
 end entity;
 
 architecture ID_stage_arch of ID_stage is
   type inst_type_t is (T_R_TYPE, T_I_TYPE, T_UNKNOWN);
 
-  signal inst_type : inst_type_t := T_UNKNOWN;
+  signal inst_type      : inst_type_t := T_UNKNOWN;
+  signal prev_inst_type : inst_type_t := T_UNKNOWN;
 begin
   p_decode: process (ir)
     variable opcode : integer := 0;
@@ -43,6 +45,7 @@ begin
     end if;
   end process;
 
+  -- This needs to be sequential because it is not part of the sequential part of the pipeline
   process (inst_type)
   begin
     if inst_type = T_I_TYPE then
@@ -52,10 +55,8 @@ begin
     end if;
   end process;
 
-  p_operand_fetch: process (inst_type, ir)
+  p_reg_sel_decode: process (inst_type, ir)
   begin
-    reg1_sel <= 0;
-    reg2_sel <= 0;
     case inst_type is
       when T_R_TYPE =>
         reg1_sel <= to_integer(unsigned(ir(11 downto 9)));
@@ -63,10 +64,12 @@ begin
       when T_I_TYPE =>
         reg1_sel <= to_integer(unsigned(ir(11 downto 9)));
       when others =>
+        reg1_sel <= 0;
+        reg2_sel <= 0;
     end case;
   end process;
 
-  p_operands: process (clk)
+  p_operand_fetch: process (clk)
   begin
     if rising_edge(clk) then
       operand1 <= (others => '0');
@@ -84,7 +87,7 @@ begin
     end if;
   end process;
 
-  p_alu_func: process (clk, inst_type, ir)
+  p_alu_func: process (clk)
   begin
     if rising_edge(clk) then
       alu_func <= 0;
@@ -98,7 +101,38 @@ begin
     end if;
   end process;
 
-  p_operand_forwad: process (inst_type, reg1, reg2)
+  p_prev_inst_type: process (clk)
   begin
+    if rising_edge(clk) then
+      prev_inst_type <= inst_type;
+    end if;
+  end process;
+
+  p_operad_forwarding: process (clk)
+  begin
+    if rising_edge(clk) then
+      operand_forward1 <= '0';
+      operand_forward2 <= '0';
+      if wb_reg = reg1_sel then
+        operand_forward1 <= '1';
+      elsif wb_reg = reg2_sel and inst_type /= T_I_TYPE then
+        operand_forward2 <= '1';
+      end if;
+    end if;
+  end process;
+
+  p_wb_reg: process (clk)
+  begin
+    if rising_edge(clk) then
+      wb_reg <= to_integer(unsigned(ir(11 downto 9)));
+      case inst_type is
+        when T_R_TYPE =>
+          wb_we <= ir(1);
+        when T_I_TYPE =>
+          wb_we <= ir(8);
+        when others =>
+          wb_we <= '0';
+      end case;
+    end if;
   end process;
 end architecture;

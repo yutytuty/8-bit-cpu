@@ -12,15 +12,21 @@ end entity;
 architecture top_arch of top is
   signal reg1_out, reg2_out : std_logic_vector(15 downto 0);
   signal reg1_sel, reg2_sel : natural range 0 to 7;
+  signal pipeline_we        : std_logic;
+  signal pipeline_reg_sel   : natural range 0 to 7;
+  signal pipeline_reg_input : std_logic_vector(15 downto 0);
 
   component pipeline is
     port (
-      clk      : in  std_logic;
-      rst      : in  std_logic;
-      reg1     : in  std_logic_vector(15 downto 0);
-      reg2     : in  std_logic_vector(15 downto 0);
-      reg1_sel : out natural range 0 to 7;
-      reg2_sel : out natural range 0 to 7);
+      clk           : in  std_logic;
+      rst           : in  std_logic;
+      reg1          : in  std_logic_vector(15 downto 0);
+      reg2          : in  std_logic_vector(15 downto 0);
+      reg1_sel      : out natural range 0 to 7;
+      reg2_sel      : out natural range 0 to 7;
+      reg_write_sel : out natural range 0 to 7;
+      reg_we        : out std_logic;
+      reg_input     : out std_logic_vector(15 downto 0));
   end component;
 
   component reg_file is
@@ -38,23 +44,26 @@ architecture top_arch of top is
 begin
   c_PIPELINE: pipeline
     port map (
-      clk      => clk,
-      rst      => rst,
-      reg1     => reg1_out,
-      reg2     => reg2_out,
-      reg1_sel => reg1_sel,
-      reg2_sel => reg2_sel
+      clk           => clk,
+      rst           => rst,
+      reg1          => reg1_out,
+      reg2          => reg2_out,
+      reg1_sel      => reg1_sel,
+      reg2_sel      => reg2_sel,
+      reg_write_sel => pipeline_reg_sel,
+      reg_we        => pipeline_we,
+      reg_input     => pipeline_reg_input
     );
 
   c_REG_FILE: reg_file
     port map (
-      clk      => clk,
+      clk      => not clk,
       rst      =>(others => rst),
-      we       => '0',
-      we_sel   => 0,
+      we       => pipeline_we,
+      we_sel   => pipeline_reg_sel,
       reg_sel1 => reg1_sel,
       reg_sel2 => reg2_sel,
-      input    =>(others => '0'),
+      input    => pipeline_reg_input,
       o1       => reg1_out,
       o2       => reg2_out
     );
