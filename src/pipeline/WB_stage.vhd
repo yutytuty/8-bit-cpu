@@ -4,7 +4,6 @@ library ieee;
 
 entity WB_stage is
   port (
-    clk                : in  std_logic;
     reg_write_sel      : in  natural range 0 to 7;
     we                 : in  std_logic;
     input              : in  std_logic_vector(15 downto 0);

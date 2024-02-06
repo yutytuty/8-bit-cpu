@@ -29,8 +29,7 @@ end entity;
 architecture ID_stage_arch of ID_stage is
   type inst_type_t is (T_R_TYPE, T_I_TYPE, T_UNKNOWN);
 
-  signal inst_type      : inst_type_t := T_UNKNOWN;
-  signal prev_inst_type : inst_type_t := T_UNKNOWN;
+  signal inst_type : inst_type_t := T_UNKNOWN;
 begin
   p_decode: process (ir)
     variable opcode : integer := 0;
@@ -98,13 +97,6 @@ begin
           alu_func <= to_integer(unsigned(ir(15 downto 12))) - 1;
         when others =>
       end case;
-    end if;
-  end process;
-
-  p_prev_inst_type: process (clk)
-  begin
-    if rising_edge(clk) then
-      prev_inst_type <= inst_type;
     end if;
   end process;
 
