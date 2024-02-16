@@ -15,12 +15,10 @@ architecture pc_reg_arch of pc_reg is
 begin
   process (clk)
   begin
-    if rising_edge(clk) then
-      if rst = '1' then
-        data <= (others => '0');
-      else
-        data <= input;
-      end if;
+    if rst = '1' then
+      data <= (others => '0');
+    elsif rising_edge(clk) then
+      data <= input;
     end if;
   end process;
 
