@@ -8,7 +8,8 @@ entity pcu is
     rst          : in  std_logic;
     inc_1andhalf : in  std_logic;
     o            : out std_logic_vector(15 downto 0);
-    extra_8      : out std_logic_vector(7 downto 0));
+    extra_8      : out std_logic_vector(7 downto 0);
+    debug        : out std_logic_vector(7 downto 0));
 end entity;
 
 architecture pcu_arch of pcu is
@@ -39,21 +40,37 @@ architecture pcu_arch of pcu is
   end component;
 
   signal pc_out, pc_adder_out : std_logic_vector(15 downto 0) := (others => '0');
-  signal pc_out_plus1         : std_logic_vector(15 downto 0) := (others => '0');
+  --signal pc_out_plus1         : std_logic_vector(15 downto 0) := (others => '0');
+  --signal pc_out_plus2         : std_logic_vector(15 downto 0) := (others => '0');
+  signal addr1, addr2 : std_logic_vector(9 downto 0);
   -- meaning it is pointing at the end part of the previous instruction.
   signal backward_pointer    : std_logic := '0';
   signal program_mem_plus1_o : std_logic_vector(15 downto 0);
   signal program_mem_o       : std_logic_vector(15 downto 0);
   signal adder_inc_2         : std_logic;
 begin
-  process (pc_out)
+  addr1 <= pc_out(9 downto 0)     when adder_inc_2 = '0' else
+           pc_out(9 downto 0) + 1 when adder_inc_2 = '1' else
+           pc_out(9 downto 0);
+
+  addr2 <= pc_out(9 downto 0) + 1 when adder_inc_2 = '0' else
+           pc_out(9 downto 0) + 2 when adder_inc_2 = '1' else
+           pc_out(9 downto 0) + 1;
+
+  process (clk)
   begin
-    pc_out_plus1 <= pc_out + 1;
+    if rst = '1' then
+      adder_inc_2 <= '0';
+    elsif falling_edge(clk) then
+      adder_inc_2 <= backward_pointer and inc_1andhalf;
+    end if;
   end process;
 
   process (clk, inc_1andhalf)
   begin
-    if falling_edge(clk) then
+    if rst = '1' then
+      backward_pointer <= '0';
+    elsif falling_edge(clk) then
       backward_pointer <= backward_pointer xor inc_1andhalf;
     end if;
   end process;
@@ -66,8 +83,6 @@ begin
       o     => pc_out
     );
 
-  adder_inc_2 <= inc_1andhalf and backward_pointer;
-
   c_PC_ADDER: pc_adder
     port map (
       input => pc_out,
@@ -78,20 +93,30 @@ begin
   c_PROGRAM_MEMORY: program_mem
     port map (
       clk   => clk,
-      addr1 => pc_out(9 downto 0),
-      addr2 => pc_out_plus1(9 downto 0),
+      addr1 => addr1,
+      addr2 => addr2,
       we    => '0',
-      input =>(others => '0'),
+      input => (others => '0'),
       o1    => program_mem_o,
       o2    => program_mem_plus1_o
     );
-  o(15 downto 8) <= program_mem_o(15 downto 8) when backward_pointer = '0' else
-                    program_mem_o(7 downto 0)  when backward_pointer = '1' else
+  o(15 downto 8) <= program_mem_o(15 downto 8)      when backward_pointer = '0' else
+                    program_mem_plus1_o(7 downto 0) when backward_pointer = '1' else
                     program_mem_o(15 downto 8);
-  o(7 downto 0) <= program_mem_o(7 downto 0)        when backward_pointer = '0' else
-                   program_mem_plus1_o(15 downto 8) when backward_pointer = '1' else
-                   program_mem_plus1_o(7 downto 0);
-  extra_8 <= program_mem_plus1_o(15 downto 8) when backward_pointer = '0' else
-             program_mem_plus1_o(7 downto 0)  when backward_pointer = '1' else
-             program_mem_plus1_o(15 downto 8);
+
+  o(7 downto 0) <= program_mem_o(7 downto 0)  when backward_pointer = '0' else
+                   program_mem_o(15 downto 8) when backward_pointer = '1' else
+                   program_mem_o(7 downto 0);
+
+  extra_8 <= program_mem_plus1_o(7 downto 0)  when backward_pointer = '0' else
+             program_mem_plus1_o(15 downto 8) when backward_pointer = '1' else
+             program_mem_plus1_o(7 downto 0);
+
+  debug <= pc_out(7 downto 0);
+  --debug <= (
+  --  0 => backward_pointer,
+  --  1 => inc_1andhalf,
+  --  2 => adder_inc_2,
+  --  others => '0'
+  --);
 end architecture;
