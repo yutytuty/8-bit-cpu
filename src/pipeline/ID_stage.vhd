@@ -11,8 +11,8 @@ entity ID_stage is
     reg1             : in  std_logic_vector(15 downto 0);
     reg2             : in  std_logic_vector(15 downto 0);
     -- outputs for reg file
-    reg1_sel         : out natural range 0 to 7;
-    reg2_sel         : out natural range 0 to 7;
+    reg1_sel         : buffer natural range 0 to 7;
+    reg2_sel         : buffer natural range 0 to 7;
     -- outputs that go back into IF stage
     inst_was_I_type  : out std_logic := '0';
     -- outputs for EX stage
@@ -22,8 +22,8 @@ entity ID_stage is
     operand_forward2 : out std_logic;
     alu_func         : out natural range 0 to 15;
     -- outputs for WB stage
-    wb_reg           : out natural range 0 to 7;
-    wb_we            : out std_logic := '0');
+    wb_reg           : buffer natural range 0 to 7;
+    wb_we            : buffer std_logic := '0');
 end entity;
 
 architecture ID_stage_arch of ID_stage is
