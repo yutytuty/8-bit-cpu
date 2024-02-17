@@ -44,7 +44,7 @@ begin
     end if;
   end process;
 
-  -- This needs to be sequential because it is not part of the sequential part of the pipeline
+  -- This needs to be not sequential because it is not part of the pipeline
   process (inst_type)
   begin
     if inst_type = T_I_TYPE then
