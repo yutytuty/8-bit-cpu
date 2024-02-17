@@ -101,16 +101,16 @@ begin
       o2    => program_mem_plus1_o
     );
   o(15 downto 8) <= program_mem_o(15 downto 8)      when backward_pointer = '0' else
-                    program_mem_plus1_o(7 downto 0) when backward_pointer = '1' else
+                    program_mem_o(7 downto 0) when backward_pointer = '1' else
                     program_mem_o(15 downto 8);
 
   o(7 downto 0) <= program_mem_o(7 downto 0)  when backward_pointer = '0' else
-                   program_mem_o(15 downto 8) when backward_pointer = '1' else
+                   program_mem_plus1_o(15 downto 8) when backward_pointer = '1' else
                    program_mem_o(7 downto 0);
 
-  extra_8 <= program_mem_plus1_o(7 downto 0)  when backward_pointer = '0' else
-             program_mem_plus1_o(15 downto 8) when backward_pointer = '1' else
-             program_mem_plus1_o(7 downto 0);
+  extra_8 <= program_mem_plus1_o(15 downto 8) when backward_pointer = '0' else
+             program_mem_plus1_o(7 downto 0)  when backward_pointer = '1' else
+             program_mem_plus1_o(15 downto 8);
 
   debug <= pc_out(7 downto 0);
   --debug <= (
