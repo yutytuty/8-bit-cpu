@@ -5,8 +5,10 @@ library ieee;
 
 entity top is
   port (
-    clk : in std_logic;
-    rst : in std_logic);
+    key0 : in  std_logic;
+    key1 : in  std_logic;
+    sw   : in  std_logic_vector(3 downto 0);
+    led  : out std_logic_vector(7 downto 0));
 end entity;
 
 architecture top_arch of top is
@@ -15,6 +17,8 @@ architecture top_arch of top is
   signal pipeline_we        : std_logic;
   signal pipeline_reg_sel   : natural range 0 to 7;
   signal pipeline_reg_input : std_logic_vector(15 downto 0);
+  signal clk, rst           : std_logic;
+  signal reg_debug_o        : std_logic_vector(15 downto 0);
 
   component pipeline is
     port (
@@ -31,17 +35,22 @@ architecture top_arch of top is
 
   component reg_file is
     port (
-      clk      : in  std_logic;
-      rst      : in  std_logic_vector(7 downto 0);
-      we       : in  std_logic;            -- do you want to write to anything
-      we_sel   : in  natural range 0 to 7; -- what do you want to write to
-      reg_sel1 : in  natural range 0 to 7;
-      reg_sel2 : in  natural range 0 to 7;
-      input    : in  std_logic_vector(15 downto 0);
-      o1       : out std_logic_vector(15 downto 0);
-      o2       : out std_logic_vector(15 downto 0)); -- select which registers to write to
+      clk       : in  std_logic;
+      rst       : in  std_logic_vector(7 downto 0);
+      we        : in  std_logic;            -- do you want to write to anything
+      we_sel    : in  natural range 0 to 7; -- what do you want to write to
+      reg_sel1  : in  natural range 0 to 7;
+      reg_sel2  : in  natural range 0 to 7;
+      debug_sel : in  natural range 0 to 7;
+      input     : in  std_logic_vector(15 downto 0);
+      o1        : out std_logic_vector(15 downto 0);
+      o2        : out std_logic_vector(15 downto 0);
+      debug_o   : out std_logic_vector(15 downto 0)); -- select which registers to write to
   end component;
 begin
+  clk <= key1;
+  rst <= not key0;
+
   c_PIPELINE: pipeline
     port map (
       clk           => clk,
@@ -57,14 +66,18 @@ begin
 
   c_REG_FILE: reg_file
     port map (
-      clk      => not clk,
-      rst      =>(others => rst),
-      we       => pipeline_we,
-      we_sel   => pipeline_reg_sel,
-      reg_sel1 => reg1_sel,
-      reg_sel2 => reg2_sel,
-      input    => pipeline_reg_input,
-      o1       => reg1_out,
-      o2       => reg2_out
+      clk       => not clk,
+      rst       => (others => rst),
+      we        => pipeline_we,
+      we_sel    => pipeline_reg_sel,
+      reg_sel1  => reg1_sel,
+      reg_sel2  => reg2_sel,
+      debug_sel => to_integer(unsigned(sw(2 downto 0))),
+      input     => pipeline_reg_input,
+      o1        => reg1_out,
+      o2        => reg2_out,
+      debug_o   => reg_debug_o
     );
+
+  led <= reg_debug_o(7 downto 0);
 end architecture;
