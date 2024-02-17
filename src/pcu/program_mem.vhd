@@ -52,7 +52,7 @@ architecture program_mem_arch of program_mem is
     24     => "0000010001000010",
     25     => "0000001000000010",
     26     => "0000000010000010",
-    others => x"ffff"
+    others => x"0000"
   );
 
 begin
