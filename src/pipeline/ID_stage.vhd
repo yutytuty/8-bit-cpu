@@ -1,21 +1,20 @@
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-use ieee.numeric_std.all;
+  use ieee.std_logic_1164.all;
+  use ieee.std_logic_unsigned.all;
+  use ieee.numeric_std.all;
 
 entity ID_stage is
-  port
-  (
-    clk     : in std_logic;
-    ir      : in std_logic_vector(15 downto 0);
-    extra_8 : in std_logic_vector(7 downto 0);
-    reg1    : in std_logic_vector(15 downto 0);
-    reg2    : in std_logic_vector(15 downto 0);
+  port (
+    clk              : in  std_logic;
+    ir               : in  std_logic_vector(15 downto 0);
+    extra_8          : in  std_logic_vector(7 downto 0);
+    reg1             : in  std_logic_vector(15 downto 0);
+    reg2             : in  std_logic_vector(15 downto 0);
     -- outputs for reg file
-    reg1_sel : buffer natural range 0 to 7;
-    reg2_sel : buffer natural range 0 to 7;
+    reg1_sel         : buffer natural range 0 to 7;
+    reg2_sel         : buffer natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type : out std_logic := '0';
+    inst_was_I_type  : out std_logic := '0';
     -- outputs for EX stage
     operand1         : out std_logic_vector(15 downto 0);
     operand2         : out std_logic_vector(15 downto 0);
@@ -23,8 +22,8 @@ entity ID_stage is
     operand_forward2 : out std_logic;
     alu_func         : out natural range 0 to 15;
     -- outputs for WB stage
-    wb_reg : buffer natural range 0 to 7;
-    wb_we  : buffer std_logic := '0');
+    wb_reg           : buffer natural range 0 to 7;
+    wb_we            : buffer std_logic := '0');
 end entity;
 
 architecture ID_stage_arch of ID_stage is
@@ -32,7 +31,7 @@ architecture ID_stage_arch of ID_stage is
 
   signal inst_type : inst_type_t := T_UNKNOWN;
 begin
-  p_decode : process (ir)
+  p_decode: process (ir)
     variable opcode : integer := 0;
   begin
     opcode := to_integer(unsigned(ir(15 downto 12)));
@@ -55,7 +54,7 @@ begin
     end if;
   end process;
 
-  p_reg_sel_decode : process (inst_type, ir)
+  p_reg_sel_decode: process (inst_type, ir)
   begin
     case inst_type is
       when T_R_TYPE =>
@@ -69,7 +68,7 @@ begin
     end case;
   end process;
 
-  p_operand_fetch : process (clk)
+  p_operand_fetch: process (clk)
   begin
     if rising_edge(clk) then
       operand1 <= (others => '0');
@@ -79,15 +78,15 @@ begin
           operand1 <= reg1;
           operand2 <= reg2;
         when T_I_TYPE =>
-          operand1              <= reg1;
+          operand1 <= reg1;
           operand2(15 downto 8) <= ir(7 downto 0);
-          operand2(7 downto 0)  <= extra_8;
+          operand2(7 downto 0) <= extra_8;
         when others =>
       end case;
     end if;
   end process;
 
-  p_alu_func : process (clk)
+  p_alu_func: process (clk)
   begin
     if rising_edge(clk) then
       alu_func <= 0;
@@ -101,7 +100,7 @@ begin
     end if;
   end process;
 
-  p_operad_forwarding : process (clk)
+  p_operad_forwarding: process (clk)
   begin
     if rising_edge(clk) then
       operand_forward1 <= '0';
@@ -114,7 +113,7 @@ begin
     end if;
   end process;
 
-  p_wb_reg : process (clk)
+  p_wb_reg: process (clk)
   begin
     if rising_edge(clk) then
       wb_reg <= to_integer(unsigned(ir(11 downto 9)));

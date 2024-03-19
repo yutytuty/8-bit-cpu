@@ -1,6 +1,6 @@
 library ieee;
-use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+  use ieee.std_logic_1164.all;
+  use ieee.std_logic_unsigned.all;
 
 entity pcu_tb is
 end entity;
@@ -13,25 +13,23 @@ architecture behavior of pcu_tb is
   signal extra_8      : std_logic_vector(7 downto 0);
 
   component pcu
-    port
-    (
-      clk          : in std_logic;
-      rst          : in std_logic;
-      inc_1andhalf : in std_logic;
+    port (
+      clk          : in  std_logic;
+      rst          : in  std_logic;
+      inc_1andhalf : in  std_logic;
       o            : out std_logic_vector(15 downto 0);
       extra_8      : out std_logic_vector(7 downto 0)
     );
   end component;
 begin
-  uut : pcu
-  port map
-  (
-    clk          => clk,
-    rst          => rst,
-    inc_1andhalf => inc_1andhalf,
-    o            => o,
-    extra_8      => extra_8
-  );
+  uut: pcu
+    port map (
+      clk          => clk,
+      rst          => rst,
+      inc_1andhalf => inc_1andhalf,
+      o            => o,
+      extra_8      => extra_8
+    );
 
   process
   begin
