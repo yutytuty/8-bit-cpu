@@ -1,24 +1,26 @@
 library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity top_tb is
 end entity;
 
 architecture top_tb_arch of top_tb is
   component top is
-    port (
+    port
+    (
       clk : in std_logic;
       rst : in std_logic);
   end component;
   signal clk : std_logic;
   signal rst : std_logic;
 begin
-  uut: top
-    port map (
-      clk => clk,
-      rst => rst
-    );
+  uut : top
+  port map
+  (
+    clk => clk,
+    rst => rst
+  );
 
   process
   begin
