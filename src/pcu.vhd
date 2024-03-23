@@ -6,16 +6,14 @@ entity pcu is
   port (
     clk     : in  std_logic;
     inc_2   : in  std_logic;
-    pc      :
-      in  std_logic_vector(15 downto 0);
+    pc      : in  std_logic_vector(15 downto 0);
     o       : out std_logic_vector(15 downto 0);
     next_16 : out std_logic_vector(15 downto 0);
     next_pc : out std_logic_vector(15 downto 0) := (others => '0'));
 end entity;
 
 architecture pcu_arch of pcu is
-  signal addr1, addr2 : std_logic_vector(9 downto 0);
-  -- meaning it is pointing at the end part of the previous instruction.
+  signal addr1, addr2        : std_logic_vector(9 downto 0);
   signal program_mem_plus1_o : std_logic_vector(15 downto 0) := (others => '0');
   signal program_mem_o       : std_logic_vector(15 downto 0) := (others => '0');
 begin
