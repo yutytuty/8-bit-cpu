@@ -1,0 +1,66 @@
+### (!) Only settings that differ from the default are shown.
+### (!) Find a complete list of settings at the end of this file
+###
+###   MasterConfig (C:\Users\yotam\config.v4p)
+###   |--- Root[C:\Users\yotam\Desktop\8-bit-cpu]: ..\..\config.v4p
+
+###################################
+##### MasterConfig            #####
+###################################
+### 'C:\Users\yotam\config.v4p' ###
+[libraries]
+  math/*.vhd = "math_lib"
+[excludes]
+  **/obj = True
+[settings]
+  
+
+######################################################
+### RootFolder: 'C:\Users\yotam\Desktop\8-bit-cpu' ###
+### ConfigFile: 'C:\Users\yotam\config.v4p'        ###
+[libraries]
+  math/*.vhd = "math_lib"
+[excludes]
+  **/obj = True
+[settings]
+  V4p.Settings.Basics.TopLevelEntities = "top.vhd"
+
+
+### This is a list of all available settings with their respective default values.
+### Please visit http://www.vide-software.at/cheatsheet_v4p.php for more information.
+###
+###    V4p.Settings.Formatting.Indentation.UseTabs = False
+###    V4p.Settings.Formatting.Indentation.TabWidth = 2
+###    V4p.Settings.Formatting.Indentation.ReportSeverity = True
+###    V4p.Settings.Formatting.Indentation.WhenChoices = True
+###    V4p.Settings.Formatting.Indentation.Declarations = True
+###    V4p.Settings.Formatting.Indentation.PortMaps = True
+###    V4p.Settings.Formatting.Indentation.UseClauses = True
+###    V4p.Settings.Formatting.Indentation.PortDeclarations = True
+###    V4p.Settings.Formatting.Newlines.ProtectedKeyword = False
+###    V4p.Settings.Formatting.Newlines.RecordKeyword = False
+###    V4p.Settings.Formatting.Newlines.UnitsKeyword = False
+###    V4p.Settings.Formatting.Newlines.WhenChoices = Keep
+###    V4p.Settings.Formatting.KeywordStyle = Lower
+###    V4p.Settings.Formatting.StandardLibraryStyle = Lower
+###    V4p.Settings.Formatting.AlignSequentialAssignments = False
+###    V4p.Settings.Basics.LicenseFile = ""
+###    V4p.Settings.Basics.LogSeverity = Note
+###    V4p.Settings.Basics.TopLevelEntities = ""
+###    V4p.Settings.HoverInfo.ShowLibraries = False
+###    V4p.Settings.HoverInfo.ShowLocation = False
+###    V4p.Settings.HoverInfo.ResolveStdTypes = False
+###    V4p.Settings.HoverInfo.ResolveTypes = True
+###    V4p.Settings.HoverInfo.ShowAllOverloads = False
+###    V4p.Settings.Completion.ShowKeywords = True
+###    V4p.Settings.Completion.ShowUncommon = False
+###    V4p.Settings.Completion.ShowEnums = True
+###    V4p.Settings.Completion.ShowVendorSymbols = False
+###    V4p.Settings.Completion.ShowVendorSnippets = False
+###    V4p.Settings.StutterMode.Enabled = False
+###    V4p.Settings.StutterMode.HorizontalLineWidth = 100
+###    V4p.Settings.ErrorChecker.MissingAssociations.IgnoreInstanceOutputs = False
+###    V4p.Settings.ErrorChecker.MissingAssociations.IgnoreInstanceInputsWithDefaultValues = False
+###    V4p.Settings.ErrorChecker.SymbolUnused.IgnoreLoopVariables = True
+###    V4p.Settings.ErrorChecker.SymbolUnused.AttributesReadValue = "delayed, driving_value, transaction, quiet, stable"
+###    V4p.Settings.ParameterHelp.Instances = True
