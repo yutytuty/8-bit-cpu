@@ -8,8 +8,9 @@ entity IF_stage is
     pc                  : in  std_logic_vector(15 downto 0);
     previous_was_i_type : in  std_logic;
     inst                : out std_logic_vector(15 downto 0) := (others => '0');
-    next_16             : out std_logic_vector(15 downto 0)  := (others => '0');
-    next_pc             : out std_logic_vector(15 downto 0) := (others => '0'));
+    next_16             : out std_logic_vector(15 downto 0) := (others => '0');
+    next_pc             : out std_logic_vector(15 downto 0) := (others => '0');
+    ex_pc               : out std_logic_vector(15 downto 0) := (others => '0'));
 end entity;
 
 architecture IF_stage_arch of IF_Stage is
@@ -31,6 +32,7 @@ begin
     if rising_edge(clk) then
       inst <= IR;
       next_16 <= pcu_next_16;
+      ex_pc <= pc;
     end if;
   end process;
 end architecture;

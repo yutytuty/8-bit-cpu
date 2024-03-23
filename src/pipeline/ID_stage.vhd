@@ -5,29 +5,32 @@ library ieee;
 
 entity ID_stage is
   port (
-    clk              : in  std_logic;
-    ir               : in  std_logic_vector(15 downto 0);
-    next_16          : in  std_logic_vector(15 downto 0);
-    reg1             : in  std_logic_vector(15 downto 0);
-    reg2             : in  std_logic_vector(15 downto 0);
+    clk              : in     std_logic;
+    ir               : in     std_logic_vector(15 downto 0);
+    next_16          : in     std_logic_vector(15 downto 0);
+    reg1             : in     std_logic_vector(15 downto 0);
+    reg2             : in     std_logic_vector(15 downto 0);
     -- outputs for reg file
     reg1_sel         : buffer natural range 0 to 7;
     reg2_sel         : buffer natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type  : out std_logic := 'Z';
+    inst_was_I_type  : out    std_logic := 'Z';
     -- outputs for EX stage
-    operand1         : out std_logic_vector(15 downto 0);
-    operand2         : out std_logic_vector(15 downto 0);
-    operand_forward1 : out std_logic;
-    operand_forward2 : out std_logic;
-    alu_func         : out natural range 0 to 15;
+    operand1         : out    std_logic_vector(15 downto 0);
+    operand2         : out    std_logic_vector(15 downto 0);
+    operand_forward1 : out    std_logic;
+    operand_forward2 : out    std_logic;
+    alu_func         : out    natural range 0 to 15;
     -- outputs for WB stage
     wb_reg           : buffer natural range 0 to 7;
-    wb_we            : buffer std_logic := '0');
+    wb_we            : buffer std_logic := '0';
+    -- outputs for jumps
+    prev_pc          : in     std_logic_vector(15 downto 0);
+    inst_is_j_type   : out    std_logic);
 end entity;
 
 architecture ID_stage_arch of ID_stage is
-  type inst_type_t is (T_R_TYPE, T_I_TYPE, T_UNKNOWN);
+  type inst_type_t is (T_R_TYPE, T_I_TYPE, T_J_TYPE, T_UNKNOWN);
 
   signal inst_type : inst_type_t := T_UNKNOWN;
 begin
@@ -39,6 +42,8 @@ begin
       inst_type <= T_R_TYPE;
     elsif opcode >= 1 and opcode < 7 then
       inst_type <= T_I_TYPE;
+    elsif opcode = 7 then
+      inst_type <= T_J_TYPE;
     else
       inst_type <= T_UNKNOWN;
     end if;
@@ -49,8 +54,6 @@ begin
   begin
     if inst_type = T_I_TYPE then
       inst_was_I_type <= '1';
-    elsif inst_type = T_UNKNOWN then
-      inst_was_I_type <= 'Z';
     else
       inst_was_I_type <= '0';
     end if;
@@ -84,6 +87,14 @@ begin
           operand1 <= reg1;
           operand2(15 downto 8) <= ir(7 downto 0);
           operand2(7 downto 0) <= next_16(15 downto 8);
+        when T_J_TYPE =>
+          operand1 <= prev_pc;
+          operand2(11 downto 0) <= ir(11 downto 0);
+          if ir(11) = '1' then
+            operand2(15 downto 12) <= (others => '1');
+          else
+            operand2(15 downto 12) <= (others => '0');
+          end if;
         when others =>
       end case;
     end if;
@@ -98,6 +109,8 @@ begin
           alu_func <= to_integer(unsigned(ir(5 downto 2)));
         when T_I_TYPE =>
           alu_func <= to_integer(unsigned(ir(15 downto 12))) - 1;
+        when T_J_TYPE =>
+          alu_func <= 1;
         when others =>
       end case;
     end if;
@@ -106,12 +119,14 @@ begin
   p_operad_forwarding: process (clk)
   begin
     if rising_edge(clk) then
-      operand_forward1 <= '0';
-      operand_forward2 <= '0';
-      if wb_reg = reg1_sel then
-        operand_forward1 <= '1';
-      elsif wb_reg = reg2_sel and inst_type /= T_I_TYPE then
-        operand_forward2 <= '1';
+      if inst_type /= T_J_TYPE then
+        operand_forward1 <= '0';
+        operand_forward2 <= '0';
+        if wb_reg = reg1_sel then
+          operand_forward1 <= '1';
+        elsif wb_reg = reg2_sel and inst_type /= T_I_TYPE then
+          operand_forward2 <= '1';
+        end if;
       end if;
     end if;
   end process;
@@ -128,6 +143,17 @@ begin
         when others =>
           wb_we <= '0';
       end case;
+    end if;
+  end process;
+
+  p_inst_is_j_type: process (clk)
+  begin
+    if rising_edge(clk) then
+      if inst_type = T_J_TYPE then
+        inst_is_j_type <= '1';
+      else
+        inst_is_j_type <= '0';
+      end if;
     end if;
   end process;
 end architecture;

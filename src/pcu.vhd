@@ -4,12 +4,12 @@ library ieee;
 
 entity pcu is
   port (
-    clk     : in  std_logic;
-    inc_2   : in  std_logic;
-    pc      : in  std_logic_vector(15 downto 0);
-    o       : out std_logic_vector(15 downto 0);
-    next_16 : out std_logic_vector(15 downto 0);
-    next_pc : out std_logic_vector(15 downto 0) := (others => '0'));
+    clk      : in  std_logic;
+    inc_2    : in  std_logic;
+    pc       : in  std_logic_vector(15 downto 0);
+    o        : out std_logic_vector(15 downto 0);
+    next_16  : out std_logic_vector(15 downto 0);
+    next_pc  : out std_logic_vector(15 downto 0) := (others => '0'));
 end entity;
 
 architecture pcu_arch of pcu is

@@ -16,7 +16,10 @@ entity EX_stage is
     wb_we              : in  std_logic;
     o                  : out std_logic_vector(15 downto 0);
     wb_reg_o           : out natural range 0 to 7;
-    wb_we_o            : out std_logic);
+    wb_we_o            : out std_logic;
+    -- for jumps
+    inst_is_j_type     : in  std_logic;
+    pc_load            : out std_logic);
 end entity;
 
 architecture EX_stage_arch of EX_stage is
@@ -50,6 +53,10 @@ begin
       o <= alu_o;
       wb_reg_o <= wb_reg;
       wb_we_o <= wb_we;
+      pc_load <= '0';
+      if inst_is_j_type = '1' then
+        pc_load <= '1';
+      end if;
     end if;
   end process;
 end architecture;
