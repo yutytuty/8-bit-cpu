@@ -7,14 +7,14 @@ entity ID_stage is
   port (
     clk              : in  std_logic;
     ir               : in  std_logic_vector(15 downto 0);
-    extra_8          : in  std_logic_vector(7 downto 0);
+    next_16          : in  std_logic_vector(15 downto 0);
     reg1             : in  std_logic_vector(15 downto 0);
     reg2             : in  std_logic_vector(15 downto 0);
     -- outputs for reg file
     reg1_sel         : buffer natural range 0 to 7;
     reg2_sel         : buffer natural range 0 to 7;
     -- outputs that go back into IF stage
-    inst_was_I_type  : out std_logic := '0';
+    inst_was_I_type  : out std_logic := 'Z';
     -- outputs for EX stage
     operand1         : out std_logic_vector(15 downto 0);
     operand2         : out std_logic_vector(15 downto 0);
@@ -49,6 +49,8 @@ begin
   begin
     if inst_type = T_I_TYPE then
       inst_was_I_type <= '1';
+    elsif inst_type = T_UNKNOWN then
+      inst_was_I_type <= 'Z';
     else
       inst_was_I_type <= '0';
     end if;
@@ -80,7 +82,7 @@ begin
         when T_I_TYPE =>
           operand1 <= reg1;
           operand2(15 downto 8) <= ir(7 downto 0);
-          operand2(7 downto 0) <= extra_8;
+          operand2(7 downto 0) <= next_16(15 downto 8);
         when others =>
       end case;
     end if;

@@ -8,29 +8,25 @@ entity reg_file is
     rst       : in  std_logic_vector(7 downto 0);
     we        : in  std_logic;            -- do you want to write to anything
     we_sel    : in  natural range 0 to 7; -- what do you want to write to
+    pc_we     : in  std_logic;
     reg_sel1  : in  natural range 0 to 7;
     reg_sel2  : in  natural range 0 to 7;
     debug_sel : in  natural range 0 to 7;
     input     : in  std_logic_vector(15 downto 0);
+    pc_input  : in  std_logic_vector(15 downto 0);
     o1        : out std_logic_vector(15 downto 0);
     o2        : out std_logic_vector(15 downto 0);
+    pc_o      : out std_logic_vector(15 downto 0);
     debug_o   : out std_logic_vector(15 downto 0)); -- select which registers to write to
 end entity;
 
 architecture reg_file_arch of reg_file is
-  component reg is
-    port (
-      clk   : in  std_logic;
-      rst   : in  std_logic;
-      we    : in  std_logic; -- write enabled
-      input : in  std_logic_vector(15 downto 0);
-      o     : out std_logic_vector(15 downto 0)
-    );
-  end component;
-  signal internal_we                                                            : std_logic_vector(7 downto 0) := (others => '0');
-  signal ar_o1, br_o1, cr_o1, dr_o1, ha_o1, la_o1                               : std_logic_vector(15 downto 0);
-  signal ar_o2, br_o2, cr_o2, dr_o2, ha_o2, la_o2                               : std_logic_vector(15 downto 0);
-  signal debug_ar_o, debug_br_o, debug_cr_o, debug_dr_o, debug_ha_o, debug_la_o : std_logic_vector(15 downto 0);
+  signal internal_we                                                            : std_logic_vector(7 downto 0)  := (others => '0');
+  signal ar_o1, br_o1, cr_o1, dr_o1, ha_o1, la_o1                               : std_logic_vector(15 downto 0) := (others => '0');
+  signal ar_o2, br_o2, cr_o2, dr_o2, ha_o2, la_o2                               : std_logic_vector(15 downto 0) := (others => '0');
+  signal debug_ar_o, debug_br_o, debug_cr_o, debug_dr_o, debug_ha_o, debug_la_o : std_logic_vector(15 downto 0) := (others => '0');
+  signal pc_clk                                                                 : std_logic                     := '0';
+  signal pc_enable                                                              : std_logic                     := '0';
 begin
   ar_o2 <= ar_o1;
   br_o2 <= br_o1;
@@ -46,7 +42,7 @@ begin
   debug_ha_o <= ha_o1;
   debug_la_o <= la_o1;
 
-  c_AR: reg
+  c_AR: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(0),
@@ -54,7 +50,7 @@ begin
       input => input,
       o     => ar_o1
     );
-  c_BR: reg
+  c_BR: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(1),
@@ -62,7 +58,7 @@ begin
       input => input,
       o     => br_o1
     );
-  c_CR: reg
+  c_CR: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(2),
@@ -70,7 +66,7 @@ begin
       input => input,
       o     => cr_o1
     );
-  c_DR: reg
+  c_DR: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(3),
@@ -78,7 +74,7 @@ begin
       input => input,
       o     => dr_o1
     );
-  c_HA: reg
+  c_HA: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(4),
@@ -86,13 +82,25 @@ begin
       input => input,
       o     => ha_o1
     );
-  c_LA: reg
+  c_LA: entity work.reg
     port map (
       clk   => clk,
       rst   => rst(5),
       we    => internal_we(5),
       input => input,
       o     => la_o1
+    );
+
+  pc_clk <= not clk;
+
+  -- enable pc only after one cycle
+  c_PC: entity work.reg
+    port map (
+      clk   => clk,
+      rst   => rst(6),
+      we    => pc_enable,
+      input => pc_input,
+      o     => pc_o
     );
 
   process (reg_sel1, ar_o1, br_o1, cr_o1, dr_o1, ha_o1, la_o1)
@@ -139,6 +147,15 @@ begin
     internal_we <= (others => '0');
     if we = '1' then
       internal_we(we_sel) <= '1';
+    end if;
+  end process;
+
+  process (clk)
+  begin
+    if falling_edge(clk) then
+      if pc_enable = '0' then
+        pc_enable <= '1';
+      end if;
     end if;
   end process;
 end architecture;
