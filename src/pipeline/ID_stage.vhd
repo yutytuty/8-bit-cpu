@@ -64,6 +64,7 @@ begin
         reg2_sel <= to_integer(unsigned(ir(8 downto 6)));
       when T_I_TYPE =>
         reg1_sel <= to_integer(unsigned(ir(11 downto 9)));
+        reg2_sel <= 0;
       when others =>
         reg1_sel <= 0;
         reg2_sel <= 0;

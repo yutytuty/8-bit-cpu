@@ -15,9 +15,6 @@ architecture pipeline_tb_arch of pipeline_tb is
   signal pc_o                           : std_logic_vector(15 downto 0);
 
   signal reg_file_clk : std_logic;
-
-  signal pc_we : std_logic;
-
 begin
   reg_file_clk <= not clk;
 
@@ -27,7 +24,6 @@ begin
       rst       => (others => '0'),
       we        => reg_we,
       we_sel    => reg_we_sel,
-      pc_we     => pc_we,
       reg_sel1  => reg1_sel,
       reg_sel2  => reg2_sel,
       debug_sel => 0,

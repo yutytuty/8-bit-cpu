@@ -8,7 +8,6 @@ entity reg_file is
     rst       : in  std_logic_vector(7 downto 0);
     we        : in  std_logic;            -- do you want to write to anything
     we_sel    : in  natural range 0 to 7; -- what do you want to write to
-    pc_we     : in  std_logic;
     reg_sel1  : in  natural range 0 to 7;
     reg_sel2  : in  natural range 0 to 7;
     debug_sel : in  natural range 0 to 7;
@@ -25,7 +24,6 @@ architecture reg_file_arch of reg_file is
   signal ar_o1, br_o1, cr_o1, dr_o1, ha_o1, la_o1                               : std_logic_vector(15 downto 0) := (others => '0');
   signal ar_o2, br_o2, cr_o2, dr_o2, ha_o2, la_o2                               : std_logic_vector(15 downto 0) := (others => '0');
   signal debug_ar_o, debug_br_o, debug_cr_o, debug_dr_o, debug_ha_o, debug_la_o : std_logic_vector(15 downto 0) := (others => '0');
-  signal pc_clk                                                                 : std_logic                     := '0';
   signal pc_enable                                                              : std_logic                     := '0';
 begin
   ar_o2 <= ar_o1;
@@ -90,8 +88,6 @@ begin
       input => input,
       o     => la_o1
     );
-
-  pc_clk <= not clk;
 
   -- enable pc only after one cycle
   c_PC: entity work.reg
