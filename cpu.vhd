@@ -6,9 +6,9 @@ library ieee;
 
 entity cpu is
   port (
-    clk           : in std_logic;
-    rst           : in std_logic;
-    debug_reg_sel : in natural range 0 to 7;
+    clk           : in  std_logic;
+    rst           : in  std_logic;
+    debug_reg_sel : in  natural range 0 to 7;
     debug_o       : out std_logic_vector(7 downto 0));
 end entity;
 

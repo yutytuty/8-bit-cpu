@@ -9,7 +9,7 @@ entity ram is
     addr  : in  std_logic_vector(15 downto 0);
     we    : in  std_logic;
     input : in  std_logic_vector(15 downto 0);
-    o    : out std_logic_vector(15 downto 0));
+    o     : out std_logic_vector(15 downto 0));
 end entity;
 
 architecture ram_arch of ram is

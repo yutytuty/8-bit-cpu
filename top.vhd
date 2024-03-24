@@ -26,7 +26,7 @@ architecture top_arch of top is
   -- frequency splitter
   constant COUNT_MAX : natural := 50000000 / 10; -- 10hz
   signal counter : natural range 0 to COUNT_MAX := 0;
-  signal clk : std_logic                    := '1';
+  signal clk     : std_logic                    := '1';
 begin
   rst <= not key0;
 
