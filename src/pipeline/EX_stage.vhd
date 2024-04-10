@@ -23,14 +23,11 @@ entity EX_stage is
 end entity;
 
 architecture EX_stage_arch of EX_stage is
-  signal alu_a, alu_b : std_logic_vector(15 downto 0);
-  signal alu_o        : std_logic_vector(15 downto 0);
-  component alu is
-    port (a    : in  std_logic_vector(15 downto 0);
-          b    : in  std_logic_vector(15 downto 0);
-          func : in  natural range 0 to 15;
-          o    : out std_logic_vector(15 downto 0));
-  end component;
+  signal alu_a, alu_b : std_logic_vector(15 downto 0) := (others => '0');
+  signal alu_o        : std_logic_vector(15 downto 0) := (others => '0');
+
+  signal alu_zf, alu_cf, alu_sf, alu_vf : std_logic := '0';
+  signal flags                          : std_logic_vector(15 downto 0);
 begin
   alu_a <= op1                when operand_forward1 = '0' else
            operand_forward_in when operand_forward1 = '1' else
@@ -39,13 +36,30 @@ begin
            operand_forward_in when operand_forward2 = '1' else
            op2;
 
-  c_ALU: alu
+  c_ALU: entity work.alu
     port map (
       a    => alu_a,
       b    => alu_b,
       func => func,
-      o    => alu_o
+      o    => alu_o,
+      ZF   => alu_zf,
+      CF   => alu_cf,
+      SF   => alu_sf,
+      VF   => alu_vf
     );
+
+  p_flags: process (clk)
+  begin
+    if rising_edge(clk) then
+      flags <= (
+        0      => alu_zf,
+        1      => alu_cf,
+        2      => alu_sf,
+        4      => alu_vf,
+        others => '0'
+      );
+    end if;
+  end process;
 
   process (clk)
   begin
