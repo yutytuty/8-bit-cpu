@@ -20,6 +20,8 @@ architecture cpu_arch of cpu is
   signal pipeline_reg_input : std_logic_vector(15 downto 0);
   signal reg_debug_o        : std_logic_vector(15 downto 0);
   signal pc, next_pc        : std_logic_vector(15 downto 0);
+  signal reg_file_clk       : std_logic;
+  signal reg_file_rst       : std_logic_vector(7 downto 0);
 begin
   c_PIPELINE: entity work.pipeline
     port map (
@@ -35,10 +37,12 @@ begin
       next_pc       => next_pc
     );
 
+  reg_file_clk <= not clk;
+  reg_file_rst <= (others => rst);
   c_REG_FILE: entity work.reg_file
     port map (
-      clk       => not clk,
-      rst       => (others => rst),
+      clk       => reg_file_clk,
+      rst       => reg_file_rst,
       we        => pipeline_we,
       we_sel    => pipeline_reg_sel,
       reg_sel1  => reg1_sel,
