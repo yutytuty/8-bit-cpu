@@ -20,9 +20,9 @@ architecture program_mem_arch of program_mem is
 
   -- MOVI AR, 5
   -- CMPI AR, 3
-  -- JA 6 (next instruction is 2 bytes + 3 nops)
+  -- JA 10
   -- MOVI AR, 1
-  -- JMP 3
+  -- JMP 6
   -- MOVI AR, 2
   signal mem : mem_t := (
     0      => "0001000100000000",
