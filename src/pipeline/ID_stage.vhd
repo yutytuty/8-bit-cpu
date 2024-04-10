@@ -3,6 +3,9 @@ library ieee;
   use ieee.std_logic_unsigned.all;
   use ieee.numeric_std.all;
 
+library work;
+  use work.types.all;
+
 entity ID_stage is
   port (
     clk              : in     std_logic;
@@ -26,13 +29,16 @@ entity ID_stage is
     wb_we            : buffer std_logic := '0';
     -- outputs for jumps
     prev_pc          : in     std_logic_vector(15 downto 0);
-    inst_is_j_type   : out    std_logic);
+    inst_is_j_type   : out    std_logic;
+    jmp_type_o       : out    jmp_type_t;
+    jmp_invert_flags : out    std_logic);
 end entity;
 
 architecture ID_stage_arch of ID_stage is
   type inst_type_t is (T_R_TYPE, T_I_TYPE, T_J_TYPE, T_UNKNOWN);
 
   signal inst_type : inst_type_t := T_UNKNOWN;
+  signal jmp_type  : jmp_type_t  := T_JMP;
 begin
   p_decode: process (ir)
     variable opcode : integer := 0;
@@ -42,7 +48,7 @@ begin
       inst_type <= T_R_TYPE;
     elsif opcode >= 1 and opcode < 7 then
       inst_type <= T_I_TYPE;
-    elsif opcode = 7 then
+    elsif opcode >= 7 and opcode < 15 then
       inst_type <= T_J_TYPE;
     else
       inst_type <= T_UNKNOWN;
@@ -89,11 +95,11 @@ begin
           operand2(7 downto 0) <= next_16(15 downto 8);
         when T_J_TYPE =>
           operand1 <= prev_pc;
-          operand2(11 downto 0) <= ir(11 downto 0);
-          if ir(11) = '1' then
-            operand2(15 downto 12) <= (others => '1');
+          operand2(10 downto 0) <= ir(10 downto 0);
+          if ir(10) = '1' then
+            operand2(15 downto 11) <= (others => '1');
           else
-            operand2(15 downto 12) <= (others => '0');
+            operand2(15 downto 11) <= (others => '0');
           end if;
         when others =>
       end case;
@@ -119,7 +125,10 @@ begin
   p_operad_forwarding: process (clk)
   begin
     if rising_edge(clk) then
-      if inst_type /= T_J_TYPE then
+      if inst_type = T_J_TYPE then
+        operand_forward1 <= '0';
+        operand_forward2 <= '0';
+      else
         operand_forward1 <= '0';
         operand_forward2 <= '0';
         if wb_reg = reg1_sel then
@@ -151,9 +160,32 @@ begin
     if rising_edge(clk) then
       if inst_type = T_J_TYPE then
         inst_is_j_type <= '1';
+        jmp_type_o <= jmp_type;
       else
+        jmp_type_o <= T_JMP;
         inst_is_j_type <= '0';
       end if;
+    end if;
+  end process;
+
+  p_jmp_type: process (inst_type, ir)
+    variable opcode : integer := 0;
+  begin
+    opcode := to_integer(unsigned(ir(15 downto 12)));
+    jmp_type <= T_JMP;
+    if inst_type = T_J_TYPE then
+      case opcode is
+        when 7 => jmp_type <= T_JMP;
+        when 8 => jmp_type <= T_JZ;
+        when 9 => jmp_type <= T_JC;
+        when 10 => jmp_type <= T_JS;
+        when 11 => jmp_type <= T_JO;
+        when 12 => jmp_type <= T_JA;
+        when 13 => jmp_type <= T_JG;
+        when 14 => jmp_type <= T_JGE;
+        when others => jmp_type <= T_JMP;
+      end case;
+      jmp_invert_flags <= ir(11);
     end if;
   end process;
 end architecture;

@@ -1,6 +1,8 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
+library work;
+  use work.types.all;
 
 entity pipeline is
   port (
@@ -29,6 +31,8 @@ architecture pipeline_arch of pipeline is
   signal id_operand_forward1, id_operand_forward2 : std_logic                     := '0';
   signal id_inst_is_j_type                        : std_logic;
   signal id_prev_pc                               : std_logic_vector(15 downto 0);
+  signal id_jmp_type                              : jmp_type_t                    := T_JMP;
+  signal id_jmp_invert_flags                      : std_logic;
 
   signal ex_out     : std_logic_vector(15 downto 0) := (others => '0');
   signal ex_wb_reg  : natural range 0 to 7          := 0;
@@ -64,7 +68,9 @@ begin
       wb_reg           => id_wb_reg,
       wb_we            => id_wb_we,
       prev_pc          => id_prev_pc,
-      inst_is_j_type   => id_inst_is_j_type
+      inst_is_j_type   => id_inst_is_j_type,
+      jmp_type_o       => id_jmp_type,
+      jmp_invert_flags => id_jmp_invert_flags
     );
 
   c_EX_stage: entity work.EX_stage
@@ -81,6 +87,8 @@ begin
       o                  => ex_out,
       wb_reg_o           => ex_wb_reg,
       wb_we_o            => ex_wb_we,
+      jmp_type           => id_jmp_type,
+      invert_flags       => id_jmp_invert_flags,
       inst_is_j_type     => id_inst_is_j_type,
       pc_load            => ex_pc_load
     );

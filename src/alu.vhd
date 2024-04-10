@@ -18,13 +18,13 @@ end entity;
 architecture alu_arch of alu is
   signal result : std_logic_vector(15 downto 0);
 begin
-  result <= b                         when func = 0 else
-            a + b when func = 1 else
-            a - b                     when func = 2 else
-            a and b                   when func = 3 else
-            a or b                    when func = 4 else
-            a xor b                   when func = 5 else
-            not a                     when func = 6 else
+  result <= b       when func = 0 else
+            a + b   when func = 1 else
+            a - b   when func = 2 else
+            a and b when func = 3 else
+            a or b  when func = 4 else
+            a xor b when func = 5 else
+            not a   when func = 6 else
             a;
 
   ZF <= '1' when result = x"00000000" else '0';
