@@ -173,6 +173,7 @@ begin
   begin
     opcode := to_integer(unsigned(ir(15 downto 12)));
     jmp_type <= T_JMP;
+    jmp_invert_flags <= '0';
     if inst_type = T_J_TYPE then
       case opcode is
         when 7 => jmp_type <= T_JMP;
