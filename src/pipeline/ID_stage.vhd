@@ -23,7 +23,7 @@ entity ID_stage is
     operand2         : out    std_logic_vector(15 downto 0);
     operand_forward1 : out    std_logic;
     operand_forward2 : out    std_logic;
-    alu_func         : out    natural range 0 to 15;
+    alu_func         : out    alu_func_t;
     -- outputs for WB stage
     wb_reg           : buffer natural range 0 to 7;
     wb_we            : buffer std_logic := '0';
@@ -35,8 +35,6 @@ entity ID_stage is
 end entity;
 
 architecture ID_stage_arch of ID_stage is
-  type inst_type_t is (T_R_TYPE, T_I_TYPE, T_J_TYPE, T_UNKNOWN);
-
   signal inst_type : inst_type_t := T_UNKNOWN;
   signal jmp_type  : jmp_type_t  := T_JMP;
 begin
@@ -109,14 +107,14 @@ begin
   p_alu_func: process (clk)
   begin
     if rising_edge(clk) then
-      alu_func <= 0;
+      alu_func <= T_MOV;
       case inst_type is
         when T_R_TYPE =>
-          alu_func <= to_integer(unsigned(ir(5 downto 2)));
+          alu_func <= NumToAluFunc(to_integer(unsigned(ir(5 downto 2))));
         when T_I_TYPE =>
-          alu_func <= to_integer(unsigned(ir(15 downto 12))) - 1;
+          alu_func <= NumToAluFunc(to_integer(unsigned(ir(15 downto 12))) - 1);
         when T_J_TYPE =>
-          alu_func <= 1;
+          alu_func <= T_ADD;
         when others =>
       end case;
     end if;

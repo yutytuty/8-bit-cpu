@@ -23,7 +23,7 @@
 [excludes]
   **/obj = True
 [settings]
-  V4p.Settings.Basics.TopLevelEntities = "top.vhd"
+  V4p.Settings.Basics.TopLevelEntities = "C:\\Users\\yotam\\Desktop\\8-bit-cpu\\top.vhd"
 
 
 ### This is a list of all available settings with their respective default values.

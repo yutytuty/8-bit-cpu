@@ -16,7 +16,7 @@ end entity;
 
 architecture program_mem_arch of program_mem is
   subtype word_t is std_logic_vector(15 downto 0);
-  type mem_t is array (0 to 1023) of word_t;
+  type mem_t is array (0 to 65535) of word_t;
 
   -- MOVI AR, 5
   -- CMPI AR, 3
@@ -41,7 +41,7 @@ architecture program_mem_arch of program_mem is
     13     => "0000000000000000",
     14     => "0001000100000000",
     15     => "0000001000000000",
-    others => x"0000"
+    others => x"FFFF"
   );
 
 begin
