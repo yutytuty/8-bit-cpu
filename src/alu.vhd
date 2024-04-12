@@ -27,6 +27,7 @@ begin
             a or b  when func = T_OR else
             a xor b when func = T_XOR else
             not a   when func = T_NOT else
+            a       when func = T_NONE else
             a;
 
   ZF <= '1' when result = x"00000000" else '0';

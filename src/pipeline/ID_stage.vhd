@@ -23,7 +23,7 @@ entity ID_stage is
     operand2         : out    std_logic_vector(15 downto 0);
     operand_forward1 : out    std_logic;
     operand_forward2 : out    std_logic;
-    alu_func         : out    natural range 0 to 6;
+    alu_func         : out    natural range 0 to 7;
     -- outputs for WB stage
     wb_reg           : buffer natural range 0 to 7;
     wb_we            : buffer std_logic := '0';

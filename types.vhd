@@ -1,9 +1,9 @@
 package types is
   type jmp_type_t is (T_JMP, T_JZ, T_JC, T_JS, T_JO, T_JA, T_JG, T_JGE);
-  type alu_func_t is (T_MOV, T_ADD, T_SUB, T_AND, T_OR, T_XOR, T_NOT, T_UNKNOWN);
+  type alu_func_t is (T_MOV, T_ADD, T_SUB, T_AND, T_OR, T_XOR, T_NOT, T_NONE, T_UNKNOWN);
   type inst_type_t is (T_R_TYPE, T_I_TYPE, T_J_TYPE, T_UNKNOWN);
 
-  function NumToAluFunc(num : natural range 0 to 6) return alu_func_t;
+  function NumToAluFunc(num : natural range 0 to 7) return alu_func_t;
   function AluFuncToNum(func : alu_func_t) return natural;
 
   function NumToJmpType(num : natural range 0 to 7) return jmp_type_t;
@@ -11,7 +11,7 @@ package types is
 end package;
 
 package body types is
-  function NumToAluFunc(num : natural range 0 to 6) return alu_func_t is
+  function NumToAluFunc(num : natural range 0 to 7) return alu_func_t is
   begin
     case num is
       when 0 => return T_MOV;
@@ -21,6 +21,7 @@ package body types is
       when 4 => return T_OR;
       when 5 => return T_XOR;
       when 6 => return T_NOT;
+      when 7 => return T_NONE;
       when others => return T_UNKNOWN;
     end case;
   end function;
@@ -35,6 +36,7 @@ package body types is
       when T_OR => return 4;
       when T_XOR => return 5;
       when T_NOT => return 6;
+      when T_NONE => return 7;
       when others => return 0;
     end case;
   end function;
