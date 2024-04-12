@@ -23,14 +23,14 @@ entity ID_stage is
     operand2         : out    std_logic_vector(15 downto 0);
     operand_forward1 : out    std_logic;
     operand_forward2 : out    std_logic;
-    alu_func         : out    alu_func_t;
+    alu_func         : out    natural range 0 to 6;
     -- outputs for WB stage
     wb_reg           : buffer natural range 0 to 7;
     wb_we            : buffer std_logic := '0';
     -- outputs for jumps
     prev_pc          : in     std_logic_vector(15 downto 0);
     inst_is_j_type   : out    std_logic;
-    jmp_type_o       : out    jmp_type_t;
+    jmp_type_o       : out    natural range 0 to 7;
     jmp_invert_flags : out    std_logic);
 end entity;
 
@@ -44,9 +44,9 @@ begin
     opcode := to_integer(unsigned(ir(15 downto 12)));
     if opcode = 0 then
       inst_type <= T_R_TYPE;
-    elsif opcode >= 1 and opcode < 7 then
+    elsif opcode = 1 then
       inst_type <= T_I_TYPE;
-    elsif opcode >= 7 and opcode < 15 then
+    elsif opcode >= 2 and opcode < 10 then
       inst_type <= T_J_TYPE;
     else
       inst_type <= T_UNKNOWN;
@@ -89,8 +89,7 @@ begin
           operand2 <= reg2;
         when T_I_TYPE =>
           operand1 <= reg1;
-          operand2(15 downto 8) <= ir(7 downto 0);
-          operand2(7 downto 0) <= next_16(15 downto 8);
+          operand2 <= next_16;
         when T_J_TYPE =>
           operand1 <= prev_pc;
           operand2(10 downto 0) <= ir(10 downto 0);
@@ -107,14 +106,14 @@ begin
   p_alu_func: process (clk)
   begin
     if rising_edge(clk) then
-      alu_func <= T_MOV;
+      alu_func <= AluFuncToNum(T_MOV);
       case inst_type is
         when T_R_TYPE =>
-          alu_func <= NumToAluFunc(to_integer(unsigned(ir(5 downto 2))));
+          alu_func <= to_integer(unsigned(ir(5 downto 2)));
         when T_I_TYPE =>
-          alu_func <= NumToAluFunc(to_integer(unsigned(ir(15 downto 12))) - 1);
+          alu_func <= to_integer(unsigned(ir(7 downto 4)));
         when T_J_TYPE =>
-          alu_func <= T_ADD;
+          alu_func <= AluFuncToNum(T_ADD);
         when others =>
       end case;
     end if;
@@ -158,9 +157,9 @@ begin
     if rising_edge(clk) then
       if inst_type = T_J_TYPE then
         inst_is_j_type <= '1';
-        jmp_type_o <= jmp_type;
+        jmp_type_o <= JmpTypeToNum(jmp_type);
       else
-        jmp_type_o <= T_JMP;
+        jmp_type_o <= JmpTypeToNum(T_JMP);
         inst_is_j_type <= '0';
       end if;
     end if;
@@ -174,14 +173,14 @@ begin
     jmp_invert_flags <= '0';
     if inst_type = T_J_TYPE then
       case opcode is
-        when 7 => jmp_type <= T_JMP;
-        when 8 => jmp_type <= T_JZ;
-        when 9 => jmp_type <= T_JC;
-        when 10 => jmp_type <= T_JS;
-        when 11 => jmp_type <= T_JO;
-        when 12 => jmp_type <= T_JA;
-        when 13 => jmp_type <= T_JG;
-        when 14 => jmp_type <= T_JGE;
+        when 2 => jmp_type <= T_JMP;
+        when 3 => jmp_type <= T_JZ;
+        when 4 => jmp_type <= T_JC;
+        when 5 => jmp_type <= T_JS;
+        when 6 => jmp_type <= T_JO;
+        when 7 => jmp_type <= T_JA;
+        when 8 => jmp_type <= T_JG;
+        when 9 => jmp_type <= T_JGE;
         when others => jmp_type <= T_JMP;
       end case;
       jmp_invert_flags <= ir(11);

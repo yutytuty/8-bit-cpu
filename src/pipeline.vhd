@@ -25,13 +25,13 @@ architecture pipeline_arch of pipeline is
 
   signal id_prev_was_i_type                       : std_logic                     := '0';
   signal id_operand1, id_operand2                 : std_logic_vector(15 downto 0) := (others => '0');
-  signal id_alu_func                              : alu_func_t                    := T_MOV;
+  signal id_alu_func                              : natural range 0 to 6          := 0;
   signal id_wb_reg                                : natural range 0 to 7          := 0;
   signal id_wb_we                                 : std_logic                     := '0';
   signal id_operand_forward1, id_operand_forward2 : std_logic                     := '0';
   signal id_inst_is_j_type                        : std_logic;
   signal id_prev_pc                               : std_logic_vector(15 downto 0);
-  signal id_jmp_type                              : jmp_type_t                    := T_JMP;
+  signal id_jmp_type                              : natural range 0 to 7         := 0;
   signal id_jmp_invert_flags                      : std_logic;
 
   signal ex_out     : std_logic_vector(15 downto 0) := (others => '0');

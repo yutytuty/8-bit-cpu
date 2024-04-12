@@ -13,14 +13,14 @@ entity EX_stage is
     operand_forward_in : in  std_logic_vector(15 downto 0);
     operand_forward1   : in  std_logic;
     operand_forward2   : in  std_logic;
-    func               : in  alu_func_t;
+    func               : in  natural range 0 to 6;
     wb_reg             : in  natural range 0 to 7;
     wb_we              : in  std_logic;
     o                  : out std_logic_vector(15 downto 0);
     wb_reg_o           : out natural range 0 to 7;
     wb_we_o            : out std_logic;
     -- for jumps
-    jmp_type           : in  jmp_type_t;
+    jmp_type           : in  natural range 0 to 7;
     invert_flags       : in  std_logic;
     inst_is_j_type     : in  std_logic;
     pc_load            : out std_logic);
@@ -28,6 +28,7 @@ end entity;
 
 architecture EX_stage_arch of EX_stage is
   signal alu_a, alu_b : std_logic_vector(15 downto 0) := (others => '0');
+  signal alu_func     : alu_func_t;
   signal alu_o        : std_logic_vector(15 downto 0) := (others => '0');
 
   signal alu_zf, alu_cf, alu_sf, alu_vf : std_logic := '0';
@@ -40,11 +41,12 @@ begin
            operand_forward_in when operand_forward2 = '1' else
            op2;
 
+  alu_func <= NumToAluFunc(func);
   c_ALU: entity work.alu
     port map (
       a    => alu_a,
       b    => alu_b,
-      func => func,
+      func => alu_func,
       o    => alu_o,
       ZF   => alu_zf,
       CF   => alu_cf,
@@ -77,7 +79,7 @@ begin
       pc_load <= '0';
       if inst_is_j_type = '1' then
         pc_load <= '0';
-        case jmp_type is
+        case NumToJmpType(jmp_type) is
           when T_JMP => condition := true;
           when T_JZ => condition := flags(0) = '1';
           when T_JC => condition := flags(1) = '1';
