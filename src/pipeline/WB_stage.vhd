@@ -4,6 +4,7 @@ library ieee;
 
 entity WB_stage is
   port (
+    -- clk : in std_logic;
     reg_write_sel      : in  natural range 0 to 7;
     we                 : in  std_logic;
     input              : in  std_logic_vector(15 downto 0);
@@ -14,6 +15,14 @@ end entity;
 
 architecture WB_stage_arch of WB_stage is
 begin
+  -- process (clk)
+  -- begin
+  --   if rising_edge(clk) then
+  --     reg_file_write_sel <= reg_write_sel;
+  --     reg_file_we <= we;
+  --     reg_file_input <= input;
+  --   end if;
+  -- end process;
   reg_file_write_sel <= reg_write_sel;
   reg_file_we        <= we;
   reg_file_input     <= input;

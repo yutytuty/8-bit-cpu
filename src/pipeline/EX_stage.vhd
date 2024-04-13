@@ -7,23 +7,33 @@ library work;
 
 entity EX_stage is
   port (
-    clk                : in  std_logic;
-    op1                : in  std_logic_vector(15 downto 0);
-    op2                : in  std_logic_vector(15 downto 0);
-    operand_forward_in : in  std_logic_vector(15 downto 0);
-    operand_forward1   : in  std_logic;
-    operand_forward2   : in  std_logic;
-    func               : in  natural range 0 to 7;
-    wb_reg             : in  natural range 0 to 7;
-    wb_we              : in  std_logic;
-    o                  : out std_logic_vector(15 downto 0);
-    wb_reg_o           : out natural range 0 to 7;
-    wb_we_o            : out std_logic;
+    clk                    : in  std_logic;
+    op1                    : in  std_logic_vector(15 downto 0);
+    op2                    : in  std_logic_vector(15 downto 0);
+    op1_use_reg            : in  std_logic;
+    op2_use_reg            : in  std_logic;
+    operand_forward_in     : in  std_logic_vector(15 downto 0);
+    operand_forward1       : in  std_logic;
+    operand_forward2       : in  std_logic;
+    func                   : in  natural range 0 to 7;
+    mem_instruction        : in  std_logic;
+    mem_read               : in  std_logic;
+    wb_reg                 : in  natural range 0 to 7;
+    wb_we                  : in  std_logic;
+    o                      : out std_logic_vector(15 downto 0);
+    -- register file
+    reg1, reg2             : in  std_logic_vector(15 downto 0);
+    -- for MEM stage
+    mem_instruction_o      : out std_logic;
+    mem_data_in            : out std_logic_vector(15 downto 0);
+    -- for WB stage
+    wb_reg_o               : out natural range 0 to 7;
+    wb_we_o                : out std_logic;
     -- for jumps
-    jmp_type           : in  natural range 0 to 7;
-    invert_flags       : in  std_logic;
-    inst_is_j_type     : in  std_logic;
-    pc_load            : out std_logic);
+    jmp_type               : in  natural range 0 to 7;
+    invert_flags           : in  std_logic;
+    inst_is_j_type         : in  std_logic;
+    pc_load                : out std_logic);
 end entity;
 
 architecture EX_stage_arch of EX_stage is
@@ -34,14 +44,17 @@ architecture EX_stage_arch of EX_stage is
   signal alu_zf, alu_cf, alu_sf, alu_vf : std_logic := '0';
   signal flags                          : std_logic_vector(15 downto 0);
 begin
-  alu_a <= op1                when operand_forward1 = '0' else
+  alu_a <= op1                when operand_forward1 = '0' and op1_use_reg = '0' else
+           reg1               when op1_use_reg = '1' and operand_forward1 = '0' else
            operand_forward_in when operand_forward1 = '1' else
            op1;
-  alu_b <= op2                when operand_forward2 = '0' else
+  alu_b <= op2                when operand_forward2 = '0' and op2_use_reg = '0' else
+           reg2               when op2_use_reg = '1' and operand_forward2 = '0' else
            operand_forward_in when operand_forward2 = '1' else
            op2;
 
   alu_func <= NumToAluFunc(func);
+
   c_ALU: entity work.alu
     port map (
       a    => alu_a,
@@ -76,6 +89,14 @@ begin
       o <= alu_o;
       wb_reg_o <= wb_reg;
       wb_we_o <= wb_we;
+      mem_instruction_o <= mem_instruction;
+      -- mem_data_in <= op1;
+      if op1_use_reg = '1' then
+        mem_data_in <= reg1;
+      else
+        mem_data_in <= op1;
+      end if;
+
       pc_load <= '0';
       if inst_is_j_type = '1' then
         pc_load <= '0';
