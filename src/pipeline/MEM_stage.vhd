@@ -1,6 +1,7 @@
 library ieee;
   use ieee.std_logic_1164.all;
   use ieee.std_logic_unsigned.all;
+  use ieee.numeric_std.all;
 
 entity MEM_stage is
   port (
@@ -30,7 +31,7 @@ begin
   mem: entity work.ram
     port map (
       clk   => mem_clk,
-      addr  => address,
+      addr  => to_integer(unsigned(address(14 downto 0))),
       we    => internal_we,
       input => data_in,
       o     => mem_o

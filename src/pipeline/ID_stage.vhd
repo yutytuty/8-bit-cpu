@@ -81,7 +81,7 @@ begin
     end if;
   end process;
 
-  p_reg_sel_decode: process (clk)
+  p_reg_sel_decode: process (inst_type, ir)
   begin
     case inst_type is
       when T_R_TYPE =>

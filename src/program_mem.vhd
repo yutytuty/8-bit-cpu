@@ -6,8 +6,8 @@ library ieee;
 entity program_mem is
   port (
     clk   : in  std_logic;
-    addr1 : in  std_logic_vector(9 downto 0); -- for now address is 10 bits wide
-    addr2 : in  std_logic_vector(9 downto 0);
+    addr1 : in  std_logic_vector(13 downto 0); -- for now address is 10 bits wide
+    addr2 : in  std_logic_vector(13 downto 0);
     we    : in  std_logic;
     input : in  std_logic_vector(15 downto 0);
     o1    : out std_logic_vector(15 downto 0);
@@ -16,7 +16,7 @@ end entity;
 
 architecture program_mem_arch of program_mem is
   subtype word_t is std_logic_vector(15 downto 0);
-  type mem_t is array (0 to 32767) of word_t;
+  type mem_t is array (0 to 16383) of word_t;
 
   -- 0:  MOVI CR, 10
   -- 2:  MOVI AR, 1
