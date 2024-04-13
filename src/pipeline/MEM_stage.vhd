@@ -23,15 +23,17 @@ architecture MEM_stage_arch of MEM_stage is
   signal mem_clk : std_logic := '0';
 
   signal internal_we : std_logic := '0';
+  signal internal_addr : natural := 0;
 
 begin
   mem_clk     <= not clk;
   internal_we <= we and mem_instruction;
+  internal_addr <= to_integer(unsigned(address(13 downto 0)));
 
   mem: entity work.ram
     port map (
       clk   => mem_clk,
-      addr  => to_integer(unsigned(address(14 downto 0))),
+      addr  => internal_addr,
       we    => internal_we,
       input => data_in,
       o     => mem_o
@@ -48,6 +50,8 @@ begin
 
       if we = '1' and mem_instruction = '1' then
         wb_we_o <= '0'; -- means instruction was ST, so no write to registers
+      elsif we = '0' and mem_instruction = '1' then
+        wb_we_o <= '1';
       else
         wb_we_o <= wb_we;
       end if;
