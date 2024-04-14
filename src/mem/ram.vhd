@@ -24,7 +24,7 @@ architecture rtl of ram is
   type memory_t is array (0 to 2 ** ADDR_WIDTH - 1) of word_t;
 
   -- Declare the RAM signal.	
-  signal ram : memory_t := (
+  signal mem : memory_t := (
     others => (others => '0')
   );
 
@@ -37,7 +37,7 @@ begin
   begin
     if (rising_edge(clk)) then
       if (we = '1') then
-        ram(addr) <= input;
+        mem(addr) <= input;
       end if;
 
       -- Register the address for reading
@@ -45,6 +45,6 @@ begin
     end if;
   end process;
 
-  o <= ram(addr_reg);
+  o <= mem(addr_reg);
 
 end architecture;
