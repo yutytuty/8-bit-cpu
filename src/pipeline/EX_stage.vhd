@@ -17,7 +17,6 @@ entity EX_stage is
     operand_forward2       : in  std_logic;
     func                   : in  natural range 0 to 7;
     mem_instruction        : in  std_logic;
-    mem_read               : in  std_logic;
     wb_reg                 : in  natural range 0 to 7;
     wb_we                  : in  std_logic;
     o                      : out std_logic_vector(15 downto 0);
@@ -46,11 +45,11 @@ architecture EX_stage_arch of EX_stage is
 begin
   alu_a <= op1                when operand_forward1 = '0' and op1_use_reg = '0' else
            reg1               when op1_use_reg = '1' and operand_forward1 = '0' else
-           operand_forward_in when operand_forward1 = '1' else
+           operand_forward_in when operand_forward1 = '1' and op1_use_reg = '1' else
            op1;
   alu_b <= op2                when operand_forward2 = '0' and op2_use_reg = '0' else
            reg2               when op2_use_reg = '1' and operand_forward2 = '0' else
-           operand_forward_in when operand_forward2 = '1' else
+           operand_forward_in when operand_forward2 = '1' and op2_use_reg = '1' else
            op2;
 
   alu_func <= NumToAluFunc(func);
@@ -90,11 +89,8 @@ begin
       wb_reg_o <= wb_reg;
       wb_we_o <= wb_we;
       mem_instruction_o <= mem_instruction;
-      -- mem_data_in <= op1;
-      if op1_use_reg = '1' then
+      if mem_instruction = '1' then
         mem_data_in <= reg1;
-      else
-        mem_data_in <= op1;
       end if;
 
       pc_load <= '0';

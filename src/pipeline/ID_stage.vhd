@@ -23,7 +23,6 @@ entity ID_stage is
     alu_func                 : out    natural range 0 to 7;
     -- outputs for MEM stage
     mem_instruction_o        : out    std_logic;
-    mem_read                 : out    std_logic;
     -- outputs for WB stage
     wb_reg                   : buffer natural range 0 to 7;
     wb_we                    : buffer std_logic := '0';
@@ -46,7 +45,6 @@ begin
   begin
     opcode := to_integer(unsigned(ir(15 downto 12)));
     mem_instruction <= '0';
-    mem_read <= '0';
     if opcode = 0 then
       inst_type <= T_R_TYPE;
     elsif opcode = 1 then
@@ -111,11 +109,31 @@ begin
       op2_use_reg <= '0';
       case inst_type is
         when T_R_TYPE =>
-          op1_use_reg <= '1';
-          op2_use_reg <= '1';
+          if mem_instruction = '1' then
+            operand1(4 downto 0) <= ir(5 downto 1);
+            if ir(5) = '1' then
+              operand1(15 downto 5) <= (others => '1');
+            else
+              operand1(15 downto 5) <= (others => '0');
+            end if;
+            op2_use_reg <= '1';
+          else
+            op1_use_reg <= '1';
+            op2_use_reg <= '1';
+          end if;
         when T_I_TYPE =>
-          op1_use_reg <= '1';
-          operand2 <= next_16;
+          if mem_instruction = '1' then
+            operand1(4 downto 0) <= ir(8 downto 4);
+            if ir(8) = '1' then
+              operand1(15 downto 5) <= (others => '1');
+            else
+              operand1(15 downto 5) <= (others => '0');
+            end if;
+            operand2 <= next_16;
+          else
+            op1_use_reg <= '1';
+            operand2 <= next_16;
+          end if;
         when T_J_TYPE =>
           operand1 <= prev_pc;
           operand2(10 downto 0) <= ir(10 downto 0);
@@ -135,9 +153,17 @@ begin
       alu_func <= AluFuncToNum(T_MOV);
       case inst_type is
         when T_R_TYPE =>
-          alu_func <= to_integer(unsigned(ir(5 downto 2)));
+          if mem_instruction = '1' then
+            alu_func <= AluFuncToNum(T_ADD);
+          else
+            alu_func <= to_integer(unsigned(ir(5 downto 2)));
+          end if;
         when T_I_TYPE =>
-          alu_func <= to_integer(unsigned(ir(7 downto 4)));
+          if mem_instruction = '1' then
+            alu_func <= AluFuncToNum(T_ADD);
+          else
+            alu_func <= to_integer(unsigned(ir(8 downto 5)));
+          end if;
         when T_J_TYPE =>
           alu_func <= AluFuncToNum(T_ADD);
         when others =>
@@ -169,9 +195,9 @@ begin
       wb_reg <= to_integer(unsigned(ir(11 downto 9)));
       case inst_type is
         when T_R_TYPE =>
-          wb_we <= ir(1);
+          wb_we <= ir(0);
         when T_I_TYPE =>
-          wb_we <= ir(8);
+          wb_we <= ir(0);
         when others =>
           wb_we <= '0';
       end case;

@@ -18,17 +18,19 @@ entity alu is
 end entity;
 
 architecture alu_arch of alu is
-  signal result : std_logic_vector(15 downto 0);
+  signal result      : std_logic_vector(15 downto 0);
+  signal mult_result : std_logic_vector(31 downto 0);
 begin
-  result <= b       when func = T_MOV else
-            a + b   when func = T_ADD else
-            a - b   when func = T_SUB else
-            a and b when func = T_AND else
-            a or b  when func = T_OR else
-            a xor b when func = T_XOR else
-            not a   when func = T_NOT else
-            a       when func = T_NONE else
-            a;
+  mult_result <= a * b;
+  result      <= b                        when func = T_MOV else
+                 a + b                    when func = T_ADD else
+                 a - b                    when func = T_SUB else
+                 a and b                  when func = T_AND else
+                 a or b                   when func = T_OR else
+                 a xor b                  when func = T_XOR else
+                 not a                    when func = T_NOT else
+                 mult_result(15 downto 0) when func = T_NONE else
+                 a;
 
   ZF <= '1' when result = x"00000000" else '0';
   CF <= '1' when ((a(15) and b(15)) = '1' or ((a(15) xor b(15)) and not result(15)) = '1') and func = T_ADD else

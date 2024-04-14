@@ -33,7 +33,7 @@ architecture pipeline_arch of pipeline is
   signal id_prev_pc                               : std_logic_vector(15 downto 0);
   signal id_jmp_type                              : natural range 0 to 7          := 0;
   signal id_jmp_invert_flags                      : std_logic                     := '0';
-  signal id_mem_read, id_mem_instruction          : std_logic                     := '0';
+  signal id_mem_instruction                       : std_logic                     := '0';
   signal id_op1_use_reg, id_op2_use_reg           : std_logic                     := '0';
 
   signal ex_out             : std_logic_vector(15 downto 0) := (others => '0');
@@ -74,7 +74,6 @@ begin
       operand_forward2   => id_operand_forward2,
       alu_func           => id_alu_func,
       mem_instruction_o  => id_mem_instruction,
-      mem_read           => id_mem_read,
       wb_reg             => id_wb_reg,
       wb_we              => id_wb_we,
       prev_pc            => id_prev_pc,
@@ -95,7 +94,6 @@ begin
       operand_forward2   => id_operand_forward2,
       func               => id_alu_func,
       mem_instruction    => id_mem_instruction,
-      mem_read           => id_mem_read,
       wb_reg             => id_wb_reg,
       wb_we              => id_wb_we,
       o                  => ex_out,

@@ -6,7 +6,7 @@ library ieee;
 entity MEM_stage is
   port (
     clk             : in  std_logic;
-    mem_instruction : in  std_logic; -- is the current instruciton an instruction that acecsses memory?
+    mem_instruction : in  std_logic; -- is the current instruction an instruction that acecsses memory?
     we              : in  std_logic;
     data_in         : in  std_logic_vector(15 downto 0);
     address         : in  std_logic_vector(15 downto 0);
