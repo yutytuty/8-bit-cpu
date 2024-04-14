@@ -13,14 +13,14 @@ entity pcu is
 end entity;
 
 architecture pcu_arch of pcu is
-  signal addr1, addr2        : std_logic_vector(9 downto 0);
+  signal addr1, addr2        : std_logic_vector(13 downto 0);
   signal program_mem_plus1_o : std_logic_vector(15 downto 0) := (others => '0');
   signal program_mem_o       : std_logic_vector(15 downto 0) := (others => '0');
 begin
   next_pc <= pc     when inc_2 = 'Z' else
              pc + 2 when inc_2 = '1' else
              pc + 1;
-  addr1 <= pc(9 downto 0);
+  addr1 <= pc(13 downto 0);
   addr2 <= addr1 + 1;
 
   c_PROGRAM_MEMORY: entity work.program_mem

@@ -8,48 +8,64 @@ library work;
 
 entity ID_stage is
   port (
-    clk              : in     std_logic;
-    ir               : in     std_logic_vector(15 downto 0);
-    next_16          : in     std_logic_vector(15 downto 0);
-    reg1             : in     std_logic_vector(15 downto 0);
-    reg2             : in     std_logic_vector(15 downto 0);
-    -- outputs for reg file
-    reg1_sel         : buffer natural range 0 to 7;
-    reg2_sel         : buffer natural range 0 to 7;
+    clk                      : in     std_logic;
+    ir                       : in     std_logic_vector(15 downto 0);
+    next_16                  : in     std_logic_vector(15 downto 0);
     -- outputs that go back into IF stage
-    inst_was_I_type  : out    std_logic := 'Z';
+    inst_was_I_type          : out    std_logic := 'Z';
     -- outputs for EX stage
-    operand1         : out    std_logic_vector(15 downto 0);
-    operand2         : out    std_logic_vector(15 downto 0);
-    operand_forward1 : out    std_logic;
-    operand_forward2 : out    std_logic;
-    alu_func         : out    natural range 0 to 6;
+    operand1, operand2       : out    std_logic_vector(15 downto 0); -- EX can use this or value in register
+    op1_use_reg, op2_use_reg : out    std_logic;
+    reg1_sel_o               : out    natural range 0 to 7;
+    reg2_sel_o               : out    natural range 0 to 7;
+    operand_forward1         : out    std_logic;
+    operand_forward2         : out    std_logic;
+    alu_func                 : out    natural range 0 to 7;
+    -- outputs for MEM stage
+    mem_instruction_o        : out    std_logic;
     -- outputs for WB stage
-    wb_reg           : buffer natural range 0 to 7;
-    wb_we            : buffer std_logic := '0';
+    wb_reg                   : buffer natural range 0 to 7;
+    wb_we                    : buffer std_logic := '0';
     -- outputs for jumps
-    prev_pc          : in     std_logic_vector(15 downto 0);
-    inst_is_j_type   : out    std_logic;
-    jmp_type_o       : out    natural range 0 to 7;
-    jmp_invert_flags : out    std_logic);
+    prev_pc                  : in     std_logic_vector(15 downto 0);
+    inst_is_j_type           : out    std_logic;
+    jmp_type_o               : out    natural range 0 to 7;
+    jmp_invert_flags_o       : out    std_logic);
 end entity;
 
 architecture ID_stage_arch of ID_stage is
-  signal inst_type : inst_type_t := T_UNKNOWN;
-  signal jmp_type  : jmp_type_t  := T_JMP;
+  signal inst_type          : inst_type_t := T_UNKNOWN;
+  signal jmp_type           : jmp_type_t  := T_JMP;
+  signal reg1_sel, reg2_sel : natural range 0 to 7;
+  signal jmp_invert_flags   : std_logic   := '0';
+  signal mem_instruction    : std_logic   := '0';
 begin
   p_decode: process (ir)
     variable opcode : integer := 0;
   begin
     opcode := to_integer(unsigned(ir(15 downto 12)));
+    mem_instruction <= '0';
     if opcode = 0 then
       inst_type <= T_R_TYPE;
     elsif opcode = 1 then
       inst_type <= T_I_TYPE;
     elsif opcode >= 2 and opcode < 10 then
       inst_type <= T_J_TYPE;
+    elsif opcode = 10 then
+      inst_type <= T_R_TYPE;
+      mem_instruction <= '1';
+    elsif opcode = 11 then
+      inst_type <= T_I_TYPE;
+      mem_instruction <= '1';
     else
       inst_type <= T_UNKNOWN;
+    end if;
+  end process;
+
+  process (clk)
+  begin
+    if rising_edge(clk) then
+      mem_instruction_o <= mem_instruction;
     end if;
   end process;
 
@@ -78,18 +94,46 @@ begin
     end case;
   end process;
 
-  p_operand_fetch: process (clk)
+  p_ex_reg_sel: process (clk)
   begin
     if rising_edge(clk) then
-      operand1 <= (others => '0');
-      operand2 <= (others => '0');
+      reg1_sel_o <= reg1_sel;
+      reg2_sel_o <= reg2_sel;
+    end if;
+  end process;
+
+  process (clk)
+  begin
+    if rising_edge(clk) then
+      op1_use_reg <= '0';
+      op2_use_reg <= '0';
       case inst_type is
         when T_R_TYPE =>
-          operand1 <= reg1;
-          operand2 <= reg2;
+          if mem_instruction = '1' then
+            operand1(4 downto 0) <= ir(5 downto 1);
+            if ir(5) = '1' then
+              operand1(15 downto 5) <= (others => '1');
+            else
+              operand1(15 downto 5) <= (others => '0');
+            end if;
+            op2_use_reg <= '1';
+          else
+            op1_use_reg <= '1';
+            op2_use_reg <= '1';
+          end if;
         when T_I_TYPE =>
-          operand1 <= reg1;
-          operand2 <= next_16;
+          if mem_instruction = '1' then
+            operand1(4 downto 0) <= ir(8 downto 4);
+            if ir(8) = '1' then
+              operand1(15 downto 5) <= (others => '1');
+            else
+              operand1(15 downto 5) <= (others => '0');
+            end if;
+            operand2 <= next_16;
+          else
+            op1_use_reg <= '1';
+            operand2 <= next_16;
+          end if;
         when T_J_TYPE =>
           operand1 <= prev_pc;
           operand2(10 downto 0) <= ir(10 downto 0);
@@ -109,9 +153,17 @@ begin
       alu_func <= AluFuncToNum(T_MOV);
       case inst_type is
         when T_R_TYPE =>
-          alu_func <= to_integer(unsigned(ir(5 downto 2)));
+          if mem_instruction = '1' then
+            alu_func <= AluFuncToNum(T_ADD);
+          else
+            alu_func <= to_integer(unsigned(ir(5 downto 2)));
+          end if;
         when T_I_TYPE =>
-          alu_func <= to_integer(unsigned(ir(7 downto 4)));
+          if mem_instruction = '1' then
+            alu_func <= AluFuncToNum(T_ADD);
+          else
+            alu_func <= to_integer(unsigned(ir(8 downto 5)));
+          end if;
         when T_J_TYPE =>
           alu_func <= AluFuncToNum(T_ADD);
         when others =>
@@ -143,9 +195,9 @@ begin
       wb_reg <= to_integer(unsigned(ir(11 downto 9)));
       case inst_type is
         when T_R_TYPE =>
-          wb_we <= ir(1);
+          wb_we <= ir(0);
         when T_I_TYPE =>
-          wb_we <= ir(8);
+          wb_we <= ir(0);
         when others =>
           wb_we <= '0';
       end case;
@@ -158,9 +210,11 @@ begin
       if inst_type = T_J_TYPE then
         inst_is_j_type <= '1';
         jmp_type_o <= JmpTypeToNum(jmp_type);
+        jmp_invert_flags_o <= jmp_invert_flags;
       else
         jmp_type_o <= JmpTypeToNum(T_JMP);
         inst_is_j_type <= '0';
+        jmp_invert_flags_o <= '0';
       end if;
     end if;
   end process;
