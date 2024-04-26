@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::collections::HashMap;
+
 use crate::error::Error;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -15,31 +17,6 @@ pub enum Register {
     PC,
 }
 
-#[derive(Debug)]
-pub enum Operand {
-    Register(Register),
-    Imm(i16),
-}
-
-pub type InvertFlags = bool;
-
-#[derive(Debug)]
-pub enum Instruction {
-    Mov(Operand, Operand),
-    Add(Operand, Operand),
-    Sub(Operand, Operand),
-    Ld(Operand, Operand),
-    Sto(Operand, Operand),
-    Jmp(i16, InvertFlags),
-    Jz(i16, InvertFlags),
-    Jc(i16, InvertFlags),
-    Js(i16, InvertFlags),
-    Jv(i16, InvertFlags),
-    Ja(i16, InvertFlags),
-    Jg(i16, InvertFlags),
-    Jge(i16, InvertFlags),
-}
-
 impl Register {
     pub fn from_string(s: &str) -> Result<Self> {
         match s.to_uppercase().as_str() {
@@ -53,6 +30,12 @@ impl Register {
             _ => Err(Error::UnknownRegister(None)),
         }
     }
+}
+
+#[derive(Debug)]
+pub enum Operand {
+    Register(Register),
+    Imm(i16),
 }
 
 impl Operand {
@@ -77,24 +60,29 @@ impl Operand {
             Err(Error::NotImplemented(
                 "Evaluating mathematical expressions not implemented".to_string(),
             ))
-            // let mut chars = s.chars();
-
-            // let mut num_str = String::new();
-            // while let Some(c) = chars.next() {
-            //   if c.is_whitespace() {
-            //     break;
-            //   } else if c.is_digit(10) {
-            //     num_str.push(c);
-            //   } else if Self::SUPPORTED_OPERATORS.contains(&c) {
-            //     break;
-            //   } else {
-            //     return Err(Error::InvalidTokenInConstant);
-            //   }
-            // }
         } else {
             Ok(s[1..].parse().unwrap())
         }
     }
+}
+
+pub type InvertFlags = bool;
+
+#[derive(Debug)]
+pub enum Instruction {
+    Mov(Operand, Operand),
+    Add(Operand, Operand),
+    Sub(Operand, Operand),
+    Ld(Operand, Operand),
+    Sto(Operand, Operand),
+    Jmp(i16, InvertFlags),
+    Jz(i16, InvertFlags),
+    Jc(i16, InvertFlags),
+    Js(i16, InvertFlags),
+    Jv(i16, InvertFlags),
+    Ja(i16, InvertFlags),
+    Jg(i16, InvertFlags),
+    Jge(i16, InvertFlags),
 }
 
 macro_rules! parse_two_operands {
@@ -126,6 +114,73 @@ impl Instruction {
             }
         } else {
             Err(Error::NotImplemented("TODO".to_string()))
+        }
+    }
+
+    // Size of types of instructions in bytes
+    const R_TYPE_SIZE: u16 = 1;
+    const J_TYPE_SIZE: u16 = 1;
+    const I_TYPE_SIZE: u16 = 2;
+
+    pub fn size(&self) -> u16 {
+        match self {
+            Self::Mov(_, op2)
+            | Self::Add(_, op2)
+            | Self::Sub(_, op2)
+            | Self::Ld(_, op2)
+            | Self::Sto(_, op2) => match op2 {
+                Operand::Register(_) => Self::R_TYPE_SIZE,
+                Operand::Imm(_) => Self::I_TYPE_SIZE,
+            },
+            Self::Jmp(_, _)
+            | Self::Jz(_, _)
+            | Self::Js(_, _)
+            | Self::Jv(_, _)
+            | Self::Jc(_, _)
+            | Self::Ja(_, _)
+            | Self::Jg(_, _)
+            | Self::Jge(_, _) => Self::J_TYPE_SIZE,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Context {
+    instructions: Vec<Instruction>,
+    lables: HashMap<String, u16>,
+    size: u16,
+}
+
+impl Context {
+    pub fn new() -> Self {
+        Self {
+            instructions: Vec::new(),
+            lables: HashMap::new(),
+            size: 0,
+        }
+    }
+
+    pub fn parse_line(&mut self, instruction_line: &str) -> Result<()> {
+        let mut line = instruction_line;
+        // Parse lables
+        if let Some((label, remaining)) = instruction_line.split_once(':') {
+            self.lables.insert(label.trim().to_string(), self.size);
+            line = remaining;
+        }
+        // Ignore comments
+        if let Some((remaining, _)) = line.split_once(';') {
+            line = remaining;
+        }
+        if line.trim().is_empty() {
+            return Ok(());
+        }
+        match Instruction::parse(line.trim()) {
+            Ok(inst) => {
+                self.size += inst.size();
+                self.instructions.push(inst);
+                Ok(())
+            }
+            Err(e) => Err(e),
         }
     }
 }

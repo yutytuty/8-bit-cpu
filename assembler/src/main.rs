@@ -3,8 +3,9 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use lex::Context;
+
 use crate::error::Error;
-use crate::lex::Instruction;
 
 mod error;
 mod lex;
@@ -19,17 +20,15 @@ fn main() -> Result<()> {
         Err(e) => return Err(Error::IO(e)),
     };
     let reader = BufReader::new(file);
+    let mut ctx = Context::new();
 
     for line_result in reader.lines() {
         let line = match line_result {
             Ok(l) => l,
             Err(e) => return Err(Error::IO(e)),
         };
-        // Skip empty lines
-        if line.trim().is_empty() {
-            continue;
-        }
-        println!("{:?}", Instruction::parse(line.as_str()));
+        ctx.parse_line(line.as_str())?;
     }
+    println!("Context: {ctx:?}");
     Ok(())
 }
