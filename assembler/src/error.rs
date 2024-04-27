@@ -8,6 +8,10 @@ pub enum Error {
     UnknownInstruction(Option<Box<Error>>),
     ExpectedOperands(Option<Box<Error>>),
     CouldNotParseOperand(Option<Box<Error>>),
+    LabelCannotContainWhitespace(Option<Box<Error>>),
+    LabelIncludesReservedCharacter(Option<Box<Error>>),
+    LabelAlreadyExists(Option<Box<Error>>, String),
+    UnknownLabel(Option<Box<Error>>, String),
 
     IO(std::io::Error),
 

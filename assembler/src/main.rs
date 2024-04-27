@@ -20,15 +20,27 @@ fn main() -> Result<()> {
         Err(e) => return Err(Error::IO(e)),
     };
     let reader = BufReader::new(file);
-    let mut ctx = Context::new();
-
+    let mut code = String::new();
     for line_result in reader.lines() {
-        let line = match line_result {
-            Ok(l) => l,
+        match line_result {
+            Ok(line) => code.push_str(format!("{line}\n").as_str()),
             Err(e) => return Err(Error::IO(e)),
-        };
-        ctx.parse_line(line.as_str())?;
+        }
     }
-    println!("Context: {ctx:?}");
+
+    // First pass to get symbols
+    println!("Starting first run");
+    let mut ctx = Context::new();
+    for line in code.lines() {
+        ctx.parse_ignore_labels(line)?;
+    }
+    // Second pass to parse all instructions
+    println!("Starting second run");
+    ctx.prepare_second_run();
+    for line in code.lines() {
+        ctx.parse_line(line)?;
+    }
+    dbg!(ctx);
+
     Ok(())
 }
