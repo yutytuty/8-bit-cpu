@@ -18,6 +18,7 @@ pub enum Register {
     SP,
     BP,
     PC,
+    DS,
 }
 
 impl Register {
@@ -30,6 +31,7 @@ impl Register {
             "SP" => Ok(Register::SP),
             "BP" => Ok(Register::BP),
             "PC" => Ok(Register::PC),
+            "DS" => Ok(Register::DS),
             _ => Err(Error::UnknownRegister(None)),
         }
     }
@@ -76,6 +78,7 @@ pub enum Instruction {
     Mov(Operand, Operand),
     Add(Operand, Operand),
     Sub(Operand, Operand),
+    Cmp(Operand, Operand),
     Ld(Operand, Operand),
     Sto(Operand, Operand),
     Jmp(i16, InvertFlags),
@@ -86,6 +89,7 @@ pub enum Instruction {
     Ja(i16, InvertFlags),
     Jg(i16, InvertFlags),
     Jge(i16, InvertFlags),
+    Jl(i16, InvertFlags),
 }
 
 macro_rules! parse_two_operands {
@@ -124,8 +128,13 @@ impl Instruction {
                 "ADD" => parse_two_operands!(Instruction::Add, operands),
                 "SUB" => parse_two_operands!(Instruction::Sub, operands),
                 "LD" => parse_two_operands!(Instruction::Ld, operands),
+                "CMP" => parse_two_operands!(Instruction::Cmp, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
                 "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
+                "JZ" => parse_jmp_operand!(Instruction::Jz, operands, false),
+                "JNZ" => parse_jmp_operand!(Instruction::Jz, operands, true),
+                "JA" => parse_jmp_operand!(Instruction::Ja, operands, false),
+                "JL" => parse_jmp_operand!(Instruction::Jge, operands, true),
                 _ => Err(Error::UnknownInstruction(None)),
             }
         } else {
@@ -145,6 +154,7 @@ impl Instruction {
             Self::Mov(_, op2)
             | Self::Add(_, op2)
             | Self::Sub(_, op2)
+            | Self::Cmp(_, op2)
             | Self::Ld(_, op2)
             | Self::Sto(_, op2) => match op2 {
                 Operand::Register(_) => Self::R_TYPE_SIZE,
@@ -157,6 +167,7 @@ impl Instruction {
             | Self::Jc(_, _)
             | Self::Ja(_, _)
             | Self::Jg(_, _)
+            | Self::Jl(_, _)
             | Self::Jge(_, _) => Self::J_TYPE_SIZE,
         }
     }
@@ -229,7 +240,6 @@ impl Context {
             line = line
                 .clone()
                 .replace(format!("{label_start}{label}").as_str(), "$0");
-            dbg!(&line);
         }
         Ok(line)
     }

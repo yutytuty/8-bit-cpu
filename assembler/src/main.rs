@@ -35,7 +35,7 @@ fn main() -> Result<()> {
         match ctx.parse_ignore_labels(line) {
             Ok(_) => (),
             Err(e) => {
-                println!("Error at line {i}: {e:?}");
+                println!("Error at line {}: {e:?}", i + 1);
                 return Err(e);
             }
         }
@@ -47,7 +47,7 @@ fn main() -> Result<()> {
         match ctx.parse_line(line) {
             Ok(_) => (),
             Err(e) => {
-                println!("Error at line {i}: {e:?}");
+                println!("Error at line {}: {e:?}", i + 1);
                 return Err(e);
             }
         }
