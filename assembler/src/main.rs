@@ -31,14 +31,26 @@ fn main() -> Result<()> {
     // First pass to get symbols
     println!("Starting first run");
     let mut ctx = Context::new();
-    for line in code.lines() {
-        ctx.parse_ignore_labels(line)?;
+    for (i, line) in code.lines().enumerate() {
+        match ctx.parse_ignore_labels(line) {
+            Ok(_) => (),
+            Err(e) => {
+                println!("Error at line {i}: {e:?}");
+                return Err(e);
+            }
+        }
     }
     // Second pass to parse all instructions
     println!("Starting second run");
     ctx.prepare_second_run();
-    for line in code.lines() {
-        ctx.parse_line(line)?;
+    for (i, line) in code.lines().enumerate() {
+        match ctx.parse_line(line) {
+            Ok(_) => (),
+            Err(e) => {
+                println!("Error at line {i}: {e:?}");
+                return Err(e);
+            }
+        }
     }
     dbg!(ctx);
 

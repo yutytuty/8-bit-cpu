@@ -94,12 +94,24 @@ macro_rules! parse_two_operands {
             match Operand::from_string(op1_str.trim()) {
                 Ok(op1) => match Operand::from_string(op2_str.trim()) {
                     Ok(op2) => Ok($instruction(op1, op2)),
-                    Err(e) => Err(Error::InvalidNumberOfOperands(Some(Box::new(e)))),
+                    Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
                 },
-                Err(e) => Err(Error::InvalidNumberOfOperands(Some(Box::new(e)))),
+                Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
             }
         } else {
             Err(Error::ExpectedOperands(None))
+        }
+    };
+}
+
+macro_rules! parse_jmp_operand {
+    ($instruction:expr, $offset_str:expr, $params:expr) => {
+        match Operand::from_string($offset_str.trim()) {
+            Ok(op) => match op {
+                Operand::Register(_) => Err(Error::JumpMustHaveConstantAsOperand(None)),
+                Operand::Imm(imm) => Ok($instruction(imm, $params)),
+            },
+            Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
         }
     };
 }
@@ -113,6 +125,7 @@ impl Instruction {
                 "SUB" => parse_two_operands!(Instruction::Sub, operands),
                 "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
+                "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
                 _ => Err(Error::UnknownInstruction(None)),
             }
         } else {
@@ -198,6 +211,29 @@ impl Context {
         }
     }
 
+    fn replace_labels_with_zero(&self, line: &str, label_start: char) -> Result<String> {
+        let mut line = line.to_string();
+        let mut label_search = line.to_string();
+        while let Some((_, label_and_remaining)) = label_search.clone().split_once(label_start) {
+            label_search = label_and_remaining.to_string();
+            let break_index_option = label_and_remaining
+                .chars()
+                .enumerate()
+                .find(|(_, c)| BREAK_CHARACTERS.contains(c))
+                .map(|(i, _)| i);
+            let label = if let Some(break_index) = break_index_option {
+                label_and_remaining.split_at(break_index).0
+            } else {
+                label_and_remaining
+            };
+            line = line
+                .clone()
+                .replace(format!("{label_start}{label}").as_str(), "$0");
+            dbg!(&line);
+        }
+        Ok(line)
+    }
+
     // TODO: add support for labels in expressions
     pub fn parse_ignore_labels(&mut self, instruction_line: &str) -> Result<()> {
         let mut line_trimmed = instruction_line.trim().to_string();
@@ -221,9 +257,23 @@ impl Context {
         if line_trimmed.trim().is_empty() {
             return Ok(());
         }
-        let mut label_search = line_trimmed.clone();
-        // replace label with name
-        while let Some((_, label_and_remaining)) = label_search.clone().split_once('.') {
+        line_trimmed = self.replace_labels_with_zero(line_trimmed.as_str(), '.')?;
+        line_trimmed = self.replace_labels_with_zero(line_trimmed.as_str(), '@')?;
+        let inst = Instruction::parse(line_trimmed.as_str())?;
+        self.size += inst.size();
+        self.instructions.push(inst);
+        Ok(())
+    }
+
+    fn replace_lables<F: Fn(&i16) -> i16>(
+        &self,
+        line: &str,
+        label_start: char,
+        replace_calculation: F,
+    ) -> Result<String> {
+        let mut line = line.to_string();
+        let mut label_search = line.to_string();
+        while let Some((_, label_and_remaining)) = label_search.clone().split_once(label_start) {
             label_search = label_and_remaining.to_string();
             let break_index_option = label_and_remaining
                 .chars()
@@ -235,14 +285,19 @@ impl Context {
             } else {
                 label_and_remaining
             };
-            line_trimmed = line_trimmed
-                .clone()
-                .replace(format!(".{label}").as_str(), "$0");
+
+            let label_address = match self.symbols.get(&label.trim().to_string()) {
+                Some(address) => address,
+                None => return Err(Error::UnknownLabel(None, label.trim().to_string())),
+            };
+            line = line
+                .replace(
+                    format!("{label_start}{label}").as_str(),
+                    format!("${}", replace_calculation(label_address)).as_str(),
+                )
+                .to_string();
         }
-        let inst = Instruction::parse(line_trimmed.as_str())?;
-        self.size += inst.size();
-        self.instructions.push(inst);
-        Ok(())
+        Ok(line)
     }
 
     pub fn parse_line(&mut self, instruction_line: &str) -> Result<()> {
@@ -261,29 +316,11 @@ impl Context {
             {}
             line = remaining.to_string();
         }
-        let mut label_search = line.clone();
-        // Replace lables with offset to them
-        while let Some((_, label_and_remaining)) = label_search.clone().split_once('.') {
-            label_search = label_and_remaining.to_string();
-            let break_index_option = label_and_remaining
-                .chars()
-                .enumerate()
-                .find(|(_, c)| BREAK_CHARACTERS.contains(c))
-                .map(|(i, _)| i);
-            let label = if let Some(break_index) = break_index_option {
-                label_and_remaining.split_at(break_index).0
-            } else {
-                label_and_remaining
-            };
-            let label_address = match self.symbols.get(&label.trim().to_string()) {
-                Some(address) => address,
-                None => return Err(Error::UnknownLabel(None, label.trim().to_string())),
-            };
-            line = line.replace(
-                format!(".{label}").as_str(),
-                format!("${}", label_address - self.size as i16).as_str(),
-            );
-        }
+        line = self.replace_lables(line.as_str(), '.', |label_address| *label_address)?;
+        line = self.replace_lables(line.as_str(), '@', |label_address| {
+            label_address - self.size as i16
+        })?;
+        // Replace lables that start with @ with the offset to them
         if line.trim().is_empty() {
             return Ok(());
         }
