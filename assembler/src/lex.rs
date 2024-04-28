@@ -134,6 +134,8 @@ pub enum Instruction {
     Cmp(Operand, Operand),
     Ld(Operand, Operand),
     Sto(Operand, Operand),
+    Push(Operand),
+    Pop(Operand),
     Jmp(i16, InvertFlags),
     Jz(i16, InvertFlags),
     Jc(i16, InvertFlags),
@@ -197,9 +199,11 @@ impl Instruction {
                 "OR" => parse_two_operands!(Instruction::Or, operands),
                 "NOT" => parse_one_operand!(Instruction::Not, operands),
                 "XOR" => parse_two_operands!(Instruction::Xor, operands),
-                "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "CMP" => parse_two_operands!(Instruction::Cmp, operands),
+                "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
+                "PUSH" => parse_one_operand!(Instruction::Push, operands),
+                "POP" => parse_one_operand!(Instruction::Pop, operands),
                 "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
                 "JZ" => parse_jmp_operand!(Instruction::Jz, operands, false),
                 "JNZ" => parse_jmp_operand!(Instruction::Jz, operands, true),
@@ -217,7 +221,7 @@ impl Instruction {
                 "JLE" => parse_jmp_operand!(Instruction::Jg, operands, true),
                 "JGE" => parse_jmp_operand!(Instruction::Jge, operands, false),
                 "JL" => parse_jmp_operand!(Instruction::Jge, operands, true),
-                _ => Err(Error::UnknownInstruction(None)),
+                _ => Err(Error::UnknownInstruction(None, instruction.to_string())),
             }
         } else {
             todo!("Implement handling for no whitespace")
@@ -233,7 +237,7 @@ impl Instruction {
 
     pub fn size(&self) -> u16 {
         match self {
-            Self::Not(..) => Self::R_TYPE_SIZE,
+            Self::Not(..) | Self::Push(..) | Self::Pop(..) => Self::R_TYPE_SIZE,
             Self::Mov(_, op2)
             | Self::Add(_, op2)
             | Self::Sub(_, op2)

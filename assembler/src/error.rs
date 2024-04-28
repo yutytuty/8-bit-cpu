@@ -7,7 +7,7 @@ pub enum Error {
     ExpectedAddress(Option<Box<Error>>),
     #[allow(dead_code)]
     InvalidTokenInConstant(Option<Box<Error>>),
-    UnknownInstruction(Option<Box<Error>>),
+    UnknownInstruction(Option<Box<Error>>, String),
     ExpectedOperands(Option<Box<Error>>),
     CouldNotParseOperand(Option<Box<Error>>),
     CouldNotParseRegister(Option<Box<Error>>),
