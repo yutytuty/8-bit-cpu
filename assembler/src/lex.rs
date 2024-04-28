@@ -8,6 +8,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 pub const RESERVED_CHARACTERS: &[char] = &[',', '+', '-', '*', '/', ';', '.', '%', '$'];
 pub const BREAK_CHARACTERS: &[char] = &[',', '+', '-', '*', '/'];
+const OFFSET_OPERATORS: &[char] = &['+', '-'];
 
 #[derive(Debug)]
 pub enum Register {
@@ -32,29 +33,74 @@ impl Register {
             "BP" => Ok(Register::BP),
             "PC" => Ok(Register::PC),
             "DS" => Ok(Register::DS),
-            _ => Err(Error::UnknownRegister(None)),
+            _ => Err(Error::UnknownRegister(None, s.to_string())),
         }
     }
 }
 
+pub type Offset = i16;
+
 #[derive(Debug)]
 pub enum Operand {
     Register(Register),
+    RegisterAndOffset(Register, Offset),
     Imm(i16),
 }
 
 impl Operand {
     pub fn from_string(s: &str) -> Result<Self> {
         match s.chars().next() {
-            Some('%') => match Register::from_string(s[1..].trim()).map(Operand::Register) {
-                Ok(reg) => Ok(reg),
-                Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
-            },
-            Some('$') => match Self::evaluate_expression(s.trim()).map(Operand::Imm) {
-                Ok(imm) => Ok(imm),
-                Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
-            },
+            Some('%') => {
+                if s.chars().any(|c| OFFSET_OPERATORS.contains(&c)) {
+                    Self::parse_register_and_offset(s)
+                } else {
+                    Self::parse_register(s)
+                }
+            }
+            Some('$') => Self::parse_imm(s),
             Some(_) | None => Err(Error::ExpectedConstantOrRegister(None)),
+        }
+    }
+
+    fn parse_register(s: &str) -> Result<Self> {
+        match Register::from_string(s[1..].trim()) {
+            Ok(reg) => Ok(Self::Register(reg)),
+            Err(e) => Err(Error::CouldNotParseRegister(Some(Box::new(e)))),
+        }
+    }
+
+    fn parse_imm(s: &str) -> Result<Self> {
+        match Self::evaluate_expression(s.trim()) {
+            Ok(imm) => Ok(Self::Imm(imm)),
+            Err(e) => Err(Error::CouldNotParseConstant(
+                Some(Box::new(e)),
+                s.to_string(),
+            )),
+        }
+    }
+
+    fn parse_register_and_offset(s: &str) -> Result<Self> {
+        let break_char = if let Some(c) = s.chars().find(|c| OFFSET_OPERATORS.contains(c)) {
+            c
+        } else {
+            return Err(Error::ExpectedOffsetOperator(None));
+        };
+        if let Some((reg, imm)) = s.split_once(break_char) {
+            match reg.chars().next() {
+                Some('%') => Ok(Self::RegisterAndOffset(
+                    match Register::from_string(reg[1..].trim()) {
+                        Ok(reg) => reg,
+                        Err(e) => return Err(Error::ExpectedAddress(Some(Box::new(e)))),
+                    },
+                    match Self::evaluate_expression(format!("${}", imm.trim()).as_str()) {
+                        Ok(imm) => imm,
+                        Err(e) => return Err(Error::ExpectedAddress(Some(Box::new(e)))),
+                    },
+                )),
+                Some(_) | None => Err(Error::ExpectedRegister(None)),
+            }
+        } else {
+            Err(Error::CouldNotParseOperand(None))
         }
     }
 
@@ -62,22 +108,29 @@ impl Operand {
 
     fn evaluate_expression(s: &str) -> Result<i16> {
         if s.starts_with('(') {
-            Err(Error::NotImplemented(
-                "Evaluating mathematical expressions not implemented".to_string(),
-            ))
+            todo!()
         } else {
-            Ok(s[1..].parse().unwrap())
+            match s[1..].parse() {
+                Ok(num) => Ok(num),
+                Err(_) => Err(Error::CouldNotParseConstant(None, s.to_string())),
+            }
         }
     }
 }
 
 pub type InvertFlags = bool;
 
+pub struct MemOffset {}
+
 #[derive(Debug)]
 pub enum Instruction {
     Mov(Operand, Operand),
     Add(Operand, Operand),
     Sub(Operand, Operand),
+    And(Operand, Operand),
+    Or(Operand, Operand),
+    Xor(Operand, Operand),
+    Not(Operand),
     Cmp(Operand, Operand),
     Ld(Operand, Operand),
     Sto(Operand, Operand),
@@ -89,7 +142,18 @@ pub enum Instruction {
     Ja(i16, InvertFlags),
     Jg(i16, InvertFlags),
     Jge(i16, InvertFlags),
-    Jl(i16, InvertFlags),
+}
+
+macro_rules! parse_one_operand {
+    ($instruction:expr, $op_str:expr) => {
+        match Operand::from_string($op_str.trim()) {
+            Ok(op) => match op {
+                Operand::Register(_) | Operand::RegisterAndOffset(_, _) => Ok($instruction(op)),
+                Operand::Imm(_) => Err(Error::ExpectedRegister(None)),
+            },
+            Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
+        }
+    };
 }
 
 macro_rules! parse_two_operands {
@@ -112,7 +176,9 @@ macro_rules! parse_jmp_operand {
     ($instruction:expr, $offset_str:expr, $params:expr) => {
         match Operand::from_string($offset_str.trim()) {
             Ok(op) => match op {
-                Operand::Register(_) => Err(Error::JumpMustHaveConstantAsOperand(None)),
+                Operand::Register(_) | Operand::RegisterAndOffset(_, _) => {
+                    Err(Error::JumpMustHaveConstantAsOperand(None))
+                }
                 Operand::Imm(imm) => Ok($instruction(imm, $params)),
             },
             Err(e) => Err(Error::CouldNotParseOperand(Some(Box::new(e)))),
@@ -127,13 +193,29 @@ impl Instruction {
                 "MOV" => parse_two_operands!(Instruction::Mov, operands),
                 "ADD" => parse_two_operands!(Instruction::Add, operands),
                 "SUB" => parse_two_operands!(Instruction::Sub, operands),
+                "AND" => parse_two_operands!(Instruction::Add, operands),
+                "OR" => parse_two_operands!(Instruction::Or, operands),
+                "NOT" => parse_one_operand!(Instruction::Not, operands),
+                "XOR" => parse_two_operands!(Instruction::Xor, operands),
                 "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "CMP" => parse_two_operands!(Instruction::Cmp, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
                 "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
                 "JZ" => parse_jmp_operand!(Instruction::Jz, operands, false),
                 "JNZ" => parse_jmp_operand!(Instruction::Jz, operands, true),
+                "JC" => parse_jmp_operand!(Instruction::Jc, operands, false),
+                "JNC" => parse_jmp_operand!(Instruction::Jc, operands, true),
+                "JS" => parse_jmp_operand!(Instruction::Js, operands, false),
+                "JNS" => parse_jmp_operand!(Instruction::Js, operands, true),
+                "JV" => parse_jmp_operand!(Instruction::Jv, operands, false),
+                "JNV" => parse_jmp_operand!(Instruction::Jv, operands, true),
                 "JA" => parse_jmp_operand!(Instruction::Ja, operands, false),
+                "JAE" => parse_jmp_operand!(Instruction::Jc, operands, true),
+                "JB" => parse_jmp_operand!(Instruction::Jc, operands, false),
+                "JBE" => parse_jmp_operand!(Instruction::Ja, operands, true),
+                "JG" => parse_jmp_operand!(Instruction::Jg, operands, false),
+                "JLE" => parse_jmp_operand!(Instruction::Jg, operands, true),
+                "JGE" => parse_jmp_operand!(Instruction::Jge, operands, false),
                 "JL" => parse_jmp_operand!(Instruction::Jge, operands, true),
                 _ => Err(Error::UnknownInstruction(None)),
             }
@@ -151,13 +233,18 @@ impl Instruction {
 
     pub fn size(&self) -> u16 {
         match self {
+            Self::Not(..) => Self::R_TYPE_SIZE,
             Self::Mov(_, op2)
             | Self::Add(_, op2)
             | Self::Sub(_, op2)
+            | Self::And(_, op2)
+            | Self::Or(_, op2)
+            | Self::Xor(_, op2)
             | Self::Cmp(_, op2)
             | Self::Ld(_, op2)
             | Self::Sto(_, op2) => match op2 {
                 Operand::Register(_) => Self::R_TYPE_SIZE,
+                Operand::RegisterAndOffset(_, _) => Self::R_TYPE_SIZE,
                 Operand::Imm(_) => Self::I_TYPE_SIZE,
             },
             Self::Jmp(_, _)
@@ -167,7 +254,6 @@ impl Instruction {
             | Self::Jc(_, _)
             | Self::Ja(_, _)
             | Self::Jg(_, _)
-            | Self::Jl(_, _)
             | Self::Jge(_, _) => Self::J_TYPE_SIZE,
         }
     }
