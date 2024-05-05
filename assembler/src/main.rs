@@ -5,9 +5,10 @@ use std::{
 
 use lex::Context;
 
-use crate::error::Error;
+use crate::{error::Error, file_format::to_modelsim_hex};
 
 mod error;
+mod file_format;
 mod lex;
 
 pub type Result<T> = core::result::Result<T, Error>;
@@ -52,12 +53,10 @@ fn main() -> Result<()> {
             }
         }
     }
-    dbg!(&ctx);
 
     let img = ctx.dump_image();
-    for word in img {
-        println!("{:016b}", word);
-    }
+    // to_mif(img, 0x4000, "sort.mif")?;
+    to_modelsim_hex(img, 0x4000, "sort.mem")?;
 
     Ok(())
 }
