@@ -36,6 +36,19 @@ impl Register {
             _ => Err(Error::UnknownRegister(None, s.to_string())),
         }
     }
+
+    fn to_word(&self) -> u16 {
+        match self {
+            Register::AR => 0,
+            Register::BR => 1,
+            Register::CR => 2,
+            Register::DR => 3,
+            Register::SP => 4,
+            Register::BP => 5,
+            Register::PC => 6,
+            Register::DS => 7,
+        }
+    }
 }
 
 pub type Offset = i16;
@@ -116,11 +129,17 @@ impl Operand {
             }
         }
     }
+
+    fn to_byte(&self) -> u16 {
+        match self {
+            Self::Register(reg) => reg.to_word(),
+            Self::Imm(imm) => *imm as u16,
+            Self::RegisterAndOffset(..) => todo!(),
+        }
+    }
 }
 
 pub type InvertFlags = bool;
-
-pub struct MemOffset {}
 
 #[derive(Debug)]
 pub enum Instruction {
@@ -130,12 +149,11 @@ pub enum Instruction {
     And(Operand, Operand),
     Or(Operand, Operand),
     Xor(Operand, Operand),
+    Mul(Operand, Operand),
     Not(Operand),
     Cmp(Operand, Operand),
     Ld(Operand, Operand),
     Sto(Operand, Operand),
-    Push(Operand),
-    Pop(Operand),
     Jmp(i16, InvertFlags),
     Jz(i16, InvertFlags),
     Jc(i16, InvertFlags),
@@ -199,11 +217,10 @@ impl Instruction {
                 "OR" => parse_two_operands!(Instruction::Or, operands),
                 "NOT" => parse_one_operand!(Instruction::Not, operands),
                 "XOR" => parse_two_operands!(Instruction::Xor, operands),
+                "MUL" => parse_two_operands!(Instruction::Mul, operands),
                 "CMP" => parse_two_operands!(Instruction::Cmp, operands),
                 "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
-                "PUSH" => parse_one_operand!(Instruction::Push, operands),
-                "POP" => parse_one_operand!(Instruction::Pop, operands),
                 "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
                 "JZ" => parse_jmp_operand!(Instruction::Jz, operands, false),
                 "JNZ" => parse_jmp_operand!(Instruction::Jz, operands, true),
@@ -237,13 +254,14 @@ impl Instruction {
 
     pub fn size(&self) -> u16 {
         match self {
-            Self::Not(..) | Self::Push(..) | Self::Pop(..) => Self::R_TYPE_SIZE,
+            Self::Not(..) => Self::R_TYPE_SIZE,
             Self::Mov(_, op2)
             | Self::Add(_, op2)
             | Self::Sub(_, op2)
             | Self::And(_, op2)
             | Self::Or(_, op2)
             | Self::Xor(_, op2)
+            | Self::Mul(_, op2)
             | Self::Cmp(_, op2)
             | Self::Ld(_, op2)
             | Self::Sto(_, op2) => match op2 {
@@ -259,6 +277,156 @@ impl Instruction {
             | Self::Ja(_, _)
             | Self::Jg(_, _)
             | Self::Jge(_, _) => Self::J_TYPE_SIZE,
+        }
+    }
+
+    fn opcode(&self) -> u16 {
+        match self {
+            Self::Not(..) => 0,
+            Self::Mov(_, op2)
+            | Self::Add(_, op2)
+            | Self::Sub(_, op2)
+            | Self::And(_, op2)
+            | Self::Or(_, op2)
+            | Self::Xor(_, op2)
+            | Self::Mul(_, op2)
+            | Self::Cmp(_, op2) => match op2 {
+                Operand::Register(_) => 0,
+                Operand::Imm(_) => 1,
+                Operand::RegisterAndOffset(_, _) => unreachable!(),
+            },
+            Self::Jmp(..) => 2,
+            Self::Jz(..) => 3,
+            Self::Jc(..) => 4,
+            Self::Js(..) => 5,
+            Self::Jv(..) => 6,
+            Self::Ja(..) => 7,
+            Self::Jg(..) => 8,
+            Self::Jge(..) => 9,
+            Self::Ld(_, address) | Self::Sto(_, address) => match address {
+                Operand::Register(_) => 10,
+                Operand::RegisterAndOffset(_, _) => 10,
+                Operand::Imm(_) => 11,
+            },
+        }
+    }
+
+    fn alu_func(&self) -> u16 {
+        match self {
+            Self::Mov(..) => 0,
+            Self::Add(..) => 1,
+            Self::Sub(..) | Self::Cmp(..) => 2,
+            Self::And(..) => 3,
+            Self::Or(..) => 4,
+            Self::Xor(..) => 5,
+            Self::Not(..) => 6,
+            Self::Mul(..) => 7,
+            _ => panic!("Called alu_func on non alu function"), // Should not happen
+        }
+    }
+
+    fn is_write_enabled(&self) -> bool {
+        match self {
+            Self::Mov(..)
+            | Self::Add(..)
+            | Self::Sub(..)
+            | Self::And(..)
+            | Self::Or(..)
+            | Self::Not(..)
+            | Self::Xor(..)
+            | Self::Mul(..) => true,
+            Self::Ld(..) => false,
+            Self::Sto(..) => true,
+            Self::Cmp(..) => false,
+            Self::Jmp(..)
+            | Self::Jz(..)
+            | Self::Jc(..)
+            | Self::Js(..)
+            | Self::Jv(..)
+            | Self::Ja(..)
+            | Self::Jg(..)
+            | Self::Jge(..) => panic!("Called is_write_enabled on jmp function"), // Does not matter for this type of function
+        }
+    }
+
+    pub fn to_words(&self) -> Result<Vec<u16>> {
+        match self {
+            Self::Mov(op1, op2)
+            | Self::Add(op1, op2)
+            | Self::Sub(op1, op2)
+            | Self::Cmp(op1, op2)
+            | Self::And(op1, op2)
+            | Self::Or(op1, op2)
+            | Self::Xor(op1, op2)
+            | Self::Mul(op1, op2) => match op1 {
+                Operand::Register(rd) => match op2 {
+                    Operand::Register(rs) => Ok(vec![
+                        self.is_write_enabled() as u16
+                            | (self.alu_func() << 2)
+                            | (rs.to_word() << 6)
+                            | (rd.to_word() << 9)
+                            | (self.opcode() << 12),
+                    ]),
+                    Operand::Imm(imm) => Ok(vec![
+                        self.is_write_enabled() as u16
+                            | (self.alu_func() << 5)
+                            | (rd.to_word() << 9)
+                            | (self.opcode() << 12),
+                        *imm as u16,
+                    ]),
+                    Operand::RegisterAndOffset(..) => Err(Error::ExpectedConstantOrRegister(None)),
+                },
+                Operand::Imm(..) | Operand::RegisterAndOffset(..) => {
+                    Err(Error::ExpectedRegister(None))
+                }
+            },
+            Self::Not(op) => match op {
+                Operand::Register(reg) => Ok(vec![
+                    self.is_write_enabled() as u16
+                        | (self.alu_func() << 2)
+                        | (reg.to_word() << 9)
+                        | (self.opcode() << 12),
+                ]),
+                Operand::Imm(..) | Operand::RegisterAndOffset(..) => {
+                    Err(Error::ExpectedRegister(None))
+                }
+            },
+            Self::Jmp(offset, invert_flags)
+            | Self::Jz(offset, invert_flags)
+            | Self::Jc(offset, invert_flags)
+            | Self::Js(offset, invert_flags)
+            | Self::Jv(offset, invert_flags)
+            | Self::Ja(offset, invert_flags)
+            | Self::Jg(offset, invert_flags)
+            | Self::Jge(offset, invert_flags) => Ok(vec![
+                *offset as u16 | ((*invert_flags as u16) << 11) | (self.opcode() << 12),
+            ]),
+            Self::Ld(data_op, addr_op) | Self::Sto(data_op, addr_op) => match data_op {
+                Operand::Register(data_reg) => match addr_op {
+                    Operand::Register(addr_reg) => Ok(vec![
+                        self.is_write_enabled() as u16
+                            | (addr_reg.to_word() << 6)
+                            | (data_reg.to_word() << 9)
+                            | (self.opcode() << 12),
+                    ]),
+                    Operand::RegisterAndOffset(addr_reg, addr_offset) => Ok(vec![
+                        self.is_write_enabled() as u16
+                            | ((*addr_offset as u16) << 1)
+                            | (addr_reg.to_word() << 6)
+                            | (data_reg.to_word() << 9)
+                            | (self.opcode() << 12),
+                    ]),
+                    Operand::Imm(addr) => Ok(vec![
+                        self.is_write_enabled() as u16
+                            | (data_reg.to_word() << 9)
+                            | (self.opcode() << 12),
+                        *addr as u16,
+                    ]),
+                },
+                Operand::RegisterAndOffset(..) | Operand::Imm(..) => {
+                    Err(Error::ExpectedRegister(None))
+                }
+            },
         }
     }
 }
@@ -427,6 +595,10 @@ impl Context {
         match Instruction::parse(line.trim()) {
             Ok(inst) => {
                 self.size += inst.size();
+                println!("{inst:?}");
+                for b in inst.to_words()?.iter() {
+                    println!("  {:016b}", b);
+                }
                 self.instructions.push(inst);
                 Ok(())
             }
@@ -437,5 +609,12 @@ impl Context {
     pub fn prepare_second_run(&mut self) {
         self.size = 0;
         self.instructions.clear();
+    }
+
+    pub fn dump_image(&self) -> Vec<u16> {
+        self.instructions
+            .iter()
+            .flat_map(|inst| inst.to_words().unwrap())
+            .collect()
     }
 }

@@ -52,7 +52,12 @@ fn main() -> Result<()> {
             }
         }
     }
-    dbg!(ctx);
+    dbg!(&ctx);
+
+    let img = ctx.dump_image();
+    for word in img {
+        println!("{:016b}", word);
+    }
 
     Ok(())
 }
