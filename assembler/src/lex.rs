@@ -9,8 +9,12 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub const RESERVED_CHARACTERS: &[char] = &[',', '+', '-', '*', '/', ';', '.', '%', '$'];
 pub const BREAK_CHARACTERS: &[char] = &[',', '+', '-', '*', '/'];
 const OFFSET_OPERATORS: &[char] = &['+', '-'];
+const NOP: Instruction = Instruction::Mov(
+    Operand::Register(Register::AR),
+    Operand::Register(Register::AR),
+);
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Register {
     AR,
     BR,
@@ -53,7 +57,7 @@ impl Register {
 
 pub type Offset = i16;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Operand {
     Register(Register),
     RegisterAndOffset(Register, Offset),
@@ -141,7 +145,7 @@ impl Operand {
 
 pub type InvertFlags = bool;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Instruction {
     Mov(Operand, Operand),
     Add(Operand, Operand),
@@ -249,7 +253,7 @@ impl Instruction {
 
     // Size of types of instructions in bytes
     const R_TYPE_SIZE: u16 = 1;
-    const J_TYPE_SIZE: u16 = 1;
+    const J_TYPE_SIZE: u16 = 4;
     const I_TYPE_SIZE: u16 = 2;
 
     pub fn size(&self) -> u16 {
@@ -399,7 +403,7 @@ impl Instruction {
             | Self::Ja(offset, invert_flags)
             | Self::Jg(offset, invert_flags)
             | Self::Jge(offset, invert_flags) => Ok(vec![
-                *offset as u16 | ((*invert_flags as u16) << 11) | (self.opcode() << 12),
+                (*offset as u16 & 0x7FF) | ((*invert_flags as u16) << 11) | (self.opcode() << 12),
             ]),
             Self::Ld(data_op, addr_op) | Self::Sto(data_op, addr_op) => match data_op {
                 Operand::Register(data_reg) => match addr_op {
@@ -600,6 +604,21 @@ impl Context {
                     println!("  {:016b}", b);
                 }
                 self.instructions.push(inst);
+                match inst {
+                    Instruction::Jmp(..)
+                    | Instruction::Jz(..)
+                    | Instruction::Jc(..)
+                    | Instruction::Js(..)
+                    | Instruction::Jv(..)
+                    | Instruction::Ja(..)
+                    | Instruction::Jg(..)
+                    | Instruction::Jge(..) => {
+                        for _ in 0..3 {
+                            self.instructions.push(NOP)
+                        }
+                    }
+                    _ => (),
+                }
                 Ok(())
             }
             Err(e) => Err(e),
