@@ -30,7 +30,6 @@ fn main() -> Result<()> {
     }
 
     // First pass to get symbols
-    println!("Starting first run");
     let mut ctx = Context::new();
     for (i, line) in code.lines().enumerate() {
         match ctx.parse_ignore_labels(line) {
@@ -42,7 +41,6 @@ fn main() -> Result<()> {
         }
     }
     // Second pass to parse all instructions
-    println!("Starting second run");
     ctx.prepare_second_run();
     for (i, line) in code.lines().enumerate() {
         match ctx.parse_line(line) {
@@ -53,7 +51,7 @@ fn main() -> Result<()> {
             }
         }
     }
-
+    dbg!(&ctx);
     let img = ctx.dump_image();
     // to_mif(img, 0x4000, "sort.mif")?;
     to_modelsim_hex(img, 0x4000, "sort.mem")?;

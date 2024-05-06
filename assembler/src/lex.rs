@@ -14,7 +14,7 @@ const NOP: Instruction = Instruction::Mov(
     Operand::Register(Register::AR),
 );
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     AR,
     BR,
@@ -57,7 +57,7 @@ impl Register {
 
 pub type Offset = i16;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Operand {
     Register(Register),
     RegisterAndOffset(Register, Offset),
@@ -145,7 +145,7 @@ impl Operand {
 
 pub type InvertFlags = bool;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Instruction {
     Mov(Operand, Operand),
     Add(Operand, Operand),
@@ -506,6 +506,141 @@ impl Context {
         Ok(line)
     }
 
+    fn solve_ld_data_hazard(&mut self, inst: &Instruction) -> Result<()> {
+        if let Some(Instruction::Ld(Operand::Register(prev_reg), _)) = self.instructions.last() {
+            match inst {
+                Instruction::Mov(op1, op2)
+                | Instruction::Add(op1, op2)
+                | Instruction::Sub(op1, op2)
+                | Instruction::And(op1, op2)
+                | Instruction::Or(op1, op2)
+                | Instruction::Xor(op1, op2)
+                | Instruction::Mul(op1, op2)
+                | Instruction::Cmp(op1, op2) => {
+                    if let Operand::Register(reg1) = op1 {
+                        if reg1 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    } else {
+                        return Err(Error::ExpectedRegister(None));
+                    }
+                    if let Operand::Register(reg2) = op2 {
+                        if reg2 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    }
+                    if let Operand::RegisterAndOffset(reg2, _) = op2 {
+                        if reg2 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    }
+                    return Ok(());
+                }
+                Instruction::Not(op1) => {
+                    if let Operand::Register(reg1) = op1 {
+                        if reg1 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    } else {
+                        return Err(Error::ExpectedRegister(None));
+                    }
+                }
+                Instruction::Ld(op1, op2) | Instruction::Sto(op1, op2) => {
+                    if let Operand::Register(reg1) = op1 {
+                        if reg1 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    } else {
+                        return Err(Error::ExpectedRegister(None));
+                    }
+                    if let Operand::Register(reg2) = op2 {
+                        if reg2 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    }
+                    if let Operand::RegisterAndOffset(reg2, _) = op2 {
+                        if reg2 == prev_reg {
+                            self.size += NOP.size();
+                            self.instructions.push(NOP);
+                            return Ok(());
+                        }
+                    }
+                    return Ok(());
+                }
+                Instruction::Jmp(..)
+                | Instruction::Jz(..)
+                | Instruction::Jc(..)
+                | Instruction::Js(..)
+                | Instruction::Jv(..)
+                | Instruction::Ja(..)
+                | Instruction::Jg(..)
+                | Instruction::Jge(..) => return Ok(()),
+            }
+        }
+        Ok(())
+    }
+
+    fn solve_sto_data_hazard(&mut self, inst: &Instruction) -> Result<()> {
+        if let Instruction::Sto(Operand::Register(reg1), op2) = inst {
+            if let Some(inst) = self.instructions.last() {
+                match inst {
+                    Instruction::Mov(prev_op1, _)
+                    | Instruction::Add(prev_op1, _)
+                    | Instruction::Sub(prev_op1, _)
+                    | Instruction::And(prev_op1, _)
+                    | Instruction::Or(prev_op1, _)
+                    | Instruction::Xor(prev_op1, _)
+                    | Instruction::Not(prev_op1)
+                    | Instruction::Mul(prev_op1, _)
+                    | Instruction::Ld(prev_op1, _) => {
+                        if let Operand::Register(prev_reg1) = prev_op1 {
+                            if prev_reg1 == reg1 {
+                                self.size += NOP.size();
+                                self.instructions.push(NOP);
+                                return Ok(());
+                            }
+                            match op2 {
+                                Operand::Register(reg2) | Operand::RegisterAndOffset(reg2, _) => {
+                                    if prev_reg1 == reg2 {
+                                        self.size += NOP.size();
+                                        self.instructions.push(NOP);
+                                        return Ok(());
+                                    }
+                                }
+                                Operand::Imm(..) => (),
+                            }
+                        } else {
+                            return Err(Error::ExpectedRegister(None));
+                        }
+                    }
+                    Instruction::Jmp(..)
+                    | Instruction::Jz(..)
+                    | Instruction::Jc(..)
+                    | Instruction::Js(..)
+                    | Instruction::Jv(..)
+                    | Instruction::Ja(..)
+                    | Instruction::Jg(..)
+                    | Instruction::Jge(..)
+                    | Instruction::Cmp(..)
+                    | Instruction::Sto(..) => return Ok(()),
+                }
+            }
+        }
+        Ok(())
+    }
+
     // TODO: add support for labels in expressions
     pub fn parse_ignore_labels(&mut self, instruction_line: &str) -> Result<()> {
         let mut line_trimmed = instruction_line.trim().to_string();
@@ -532,6 +667,8 @@ impl Context {
         line_trimmed = self.replace_labels_with_zero(line_trimmed.as_str(), '.')?;
         line_trimmed = self.replace_labels_with_zero(line_trimmed.as_str(), '@')?;
         let inst = Instruction::parse(line_trimmed.as_str())?;
+        self.solve_ld_data_hazard(&inst)?;
+        self.solve_sto_data_hazard(&inst)?;
         self.size += inst.size();
         self.instructions.push(inst);
         Ok(())
@@ -598,11 +735,9 @@ impl Context {
         }
         match Instruction::parse(line.trim()) {
             Ok(inst) => {
+                self.solve_ld_data_hazard(&inst)?;
+                self.solve_sto_data_hazard(&inst)?;
                 self.size += inst.size();
-                println!("{inst:?}");
-                for b in inst.to_words()?.iter() {
-                    println!("  {:016b}", b);
-                }
                 self.instructions.push(inst);
                 match inst {
                     Instruction::Jmp(..)
@@ -614,7 +749,7 @@ impl Context {
                     | Instruction::Jg(..)
                     | Instruction::Jge(..) => {
                         for _ in 0..3 {
-                            self.instructions.push(NOP)
+                            self.instructions.push(NOP);
                         }
                     }
                     _ => (),
