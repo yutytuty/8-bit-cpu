@@ -18,7 +18,7 @@ pub fn to_mif(img: Vec<u16>, depth: usize, path: &str) -> Result<()> {
     for (i, word) in img.iter().enumerate() {
         content.push_str(format!("	{i}    :   {word};\n").as_str());
     }
-    content.push_str(format!("	[{}..{}]  :   0;\n", img.len(),depth - 1).as_str());
+    content.push_str(format!("	[{}..{}]  :   0;\n", img.len(), depth - 1).as_str());
     content.push_str("END;\n");
     let final_str = format!("{header}{content}");
     match file.write_all(final_str.as_bytes()) {
@@ -39,7 +39,7 @@ pub fn to_modelsim_hex(img: Vec<u16>, depth: usize, path: &str) -> Result<()> {
             content.push('\n');
         }
         content.push_str(format!("{word:04X}").as_str());
-        if i % 16 != 0 || i % 16 == 0 {
+        if i % 16 != 15 {
             content.push(' ');
         }
     }
@@ -47,8 +47,8 @@ pub fn to_modelsim_hex(img: Vec<u16>, depth: usize, path: &str) -> Result<()> {
         if i % 16 == 0 && i != 0 {
             content.push('\n');
         }
-        content.push_str(format!("0000").as_str());
-        if i % 16 != 0 || i % 16 == 0 {
+        content.push_str(r#"0000"#);
+        if i % 16 != 15 {
             content.push(' ');
         }
     }

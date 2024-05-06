@@ -41,7 +41,7 @@ impl Register {
         }
     }
 
-    fn to_word(&self) -> u16 {
+    fn to_word(self) -> u16 {
         match self {
             Register::AR => 0,
             Register::BR => 1,
@@ -134,10 +134,10 @@ impl Operand {
         }
     }
 
-    fn to_byte(&self) -> u16 {
+    fn to_byte(self) -> u16 {
         match self {
             Self::Register(reg) => reg.to_word(),
-            Self::Imm(imm) => *imm as u16,
+            Self::Imm(imm) => imm as u16,
             Self::RegisterAndOffset(..) => todo!(),
         }
     }
@@ -353,7 +353,7 @@ impl Instruction {
         }
     }
 
-    pub fn to_words(&self) -> Result<Vec<u16>> {
+    pub fn to_words(self) -> Result<Vec<u16>> {
         match self {
             Self::Mov(op1, op2)
             | Self::Add(op1, op2)
@@ -376,7 +376,7 @@ impl Instruction {
                             | (self.alu_func() << 5)
                             | (rd.to_word() << 9)
                             | (self.opcode() << 12),
-                        *imm as u16,
+                        imm as u16,
                     ]),
                     Operand::RegisterAndOffset(..) => Err(Error::ExpectedConstantOrRegister(None)),
                 },
@@ -403,7 +403,7 @@ impl Instruction {
             | Self::Ja(offset, invert_flags)
             | Self::Jg(offset, invert_flags)
             | Self::Jge(offset, invert_flags) => Ok(vec![
-                (*offset as u16 & 0x7FF) | ((*invert_flags as u16) << 11) | (self.opcode() << 12),
+                (offset as u16 & 0x7FF) | ((invert_flags as u16) << 11) | (self.opcode() << 12),
             ]),
             Self::Ld(data_op, addr_op) | Self::Sto(data_op, addr_op) => match data_op {
                 Operand::Register(data_reg) => match addr_op {
@@ -415,7 +415,7 @@ impl Instruction {
                     ]),
                     Operand::RegisterAndOffset(addr_reg, addr_offset) => Ok(vec![
                         self.is_write_enabled() as u16
-                            | ((*addr_offset as u16) << 1)
+                            | ((addr_offset as u16) << 1)
                             | (addr_reg.to_word() << 6)
                             | (data_reg.to_word() << 9)
                             | (self.opcode() << 12),
@@ -424,7 +424,7 @@ impl Instruction {
                         self.is_write_enabled() as u16
                             | (data_reg.to_word() << 9)
                             | (self.opcode() << 12),
-                        *addr as u16,
+                        addr as u16,
                     ]),
                 },
                 Operand::RegisterAndOffset(..) | Operand::Imm(..) => {
