@@ -18,6 +18,8 @@ pub enum Error {
     UnknownLabel(Option<Box<Error>>, String),
     JumpMustHaveConstantAsOperand(Option<Box<Error>>),
 
+    UnknownFormat,
+
     IO(std::io::Error),
 
     NotImplemented(String),
