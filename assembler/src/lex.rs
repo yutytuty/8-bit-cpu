@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 
 use crate::error::Error;
@@ -121,8 +119,6 @@ impl Operand {
         }
     }
 
-    const SUPPORTED_OPERATORS: [char; 4] = ['+', '-', '*', '/'];
-
     fn evaluate_expression(s: &str) -> Result<i16> {
         if s.starts_with('(') {
             todo!()
@@ -131,14 +127,6 @@ impl Operand {
                 Ok(num) => Ok(num),
                 Err(_) => Err(Error::CouldNotParseConstant(None, s.to_string())),
             }
-        }
-    }
-
-    fn to_byte(self) -> u16 {
-        match self {
-            Self::Register(reg) => reg.to_word(),
-            Self::Imm(imm) => imm as u16,
-            Self::RegisterAndOffset(..) => todo!(),
         }
     }
 }
@@ -217,7 +205,7 @@ impl Instruction {
                 "MOV" => parse_two_operands!(Instruction::Mov, operands),
                 "ADD" => parse_two_operands!(Instruction::Add, operands),
                 "SUB" => parse_two_operands!(Instruction::Sub, operands),
-                "AND" => parse_two_operands!(Instruction::Add, operands),
+                "AND" => parse_two_operands!(Instruction::And, operands),
                 "OR" => parse_two_operands!(Instruction::Or, operands),
                 "NOT" => parse_one_operand!(Instruction::Not, operands),
                 "XOR" => parse_two_operands!(Instruction::Xor, operands),
@@ -248,8 +236,6 @@ impl Instruction {
             todo!("Implement handling for no whitespace")
         }
     }
-
-    const SEPERATORS: [char; 1] = [','];
 
     // Size of types of instructions in bytes
     const R_TYPE_SIZE: u16 = 1;
