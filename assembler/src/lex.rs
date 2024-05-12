@@ -143,6 +143,8 @@ pub enum Instruction {
     Xor(Operand, Operand),
     Mul(Operand, Operand),
     Not(Operand),
+    Shl(Operand, Operand),
+    Shr(Operand, Operand),
     Cmp(Operand, Operand),
     Ld(Operand, Operand),
     Sto(Operand, Operand),
@@ -211,6 +213,8 @@ impl Instruction {
                 "XOR" => parse_two_operands!(Instruction::Xor, operands),
                 "MUL" => parse_two_operands!(Instruction::Mul, operands),
                 "CMP" => parse_two_operands!(Instruction::Cmp, operands),
+                "SHL" => parse_two_operands!(Instruction::Shl, operands),
+                "SHR" => parse_two_operands!(Instruction::Shr, operands),
                 "LD" => parse_two_operands!(Instruction::Ld, operands),
                 "STO" => parse_two_operands!(Instruction::Sto, operands),
                 "JMP" => parse_jmp_operand!(Instruction::Jmp, operands, false),
@@ -253,6 +257,8 @@ impl Instruction {
             | Self::Xor(_, op2)
             | Self::Mul(_, op2)
             | Self::Cmp(_, op2)
+            | Self::Shl(_, op2)
+            | Self::Shr(_, op2)
             | Self::Ld(_, op2)
             | Self::Sto(_, op2) => match op2 {
                 Operand::Register(_) => Self::R_TYPE_SIZE,
@@ -280,7 +286,9 @@ impl Instruction {
             | Self::Or(_, op2)
             | Self::Xor(_, op2)
             | Self::Mul(_, op2)
-            | Self::Cmp(_, op2) => match op2 {
+            | Self::Cmp(_, op2)
+            | Self::Shl(_, op2)
+            | Self::Shr(_, op2) => match op2 {
                 Operand::Register(_) => 0,
                 Operand::Imm(_) => 1,
                 Operand::RegisterAndOffset(_, _) => unreachable!(),
@@ -311,6 +319,8 @@ impl Instruction {
             Self::Xor(..) => 5,
             Self::Not(..) => 6,
             Self::Mul(..) => 7,
+            Self::Shl(..) => 8,
+            Self::Shr(..) => 9,
             _ => panic!("Called alu_func on non alu function"), // Should not happen
         }
     }
@@ -324,7 +334,9 @@ impl Instruction {
             | Self::Or(..)
             | Self::Not(..)
             | Self::Xor(..)
-            | Self::Mul(..) => true,
+            | Self::Mul(..)
+            | Self::Shl(..)
+            | Self::Shr(..) => true,
             Self::Ld(..) => false,
             Self::Sto(..) => true,
             Self::Cmp(..) => false,
@@ -348,7 +360,9 @@ impl Instruction {
             | Self::And(op1, op2)
             | Self::Or(op1, op2)
             | Self::Xor(op1, op2)
-            | Self::Mul(op1, op2) => match op1 {
+            | Self::Mul(op1, op2)
+            | Self::Shl(op1, op2)
+            | Self::Shr(op1, op2) => match op1 {
                 Operand::Register(rd) => match op2 {
                     Operand::Register(rs) => Ok(vec![
                         self.is_write_enabled() as u16
@@ -381,6 +395,21 @@ impl Instruction {
                     Err(Error::ExpectedRegister(None))
                 }
             },
+            // Self::Shl(op1, op2) | Self::Shr(op1, op2) => match op1 {
+            //     Operand::Register(rd) => match op2 {
+            //         Operand::Imm(shift_amount) => Ok(vec![
+            //             self.is_write_enabled() as u16
+            //             | (self.alu_func() << 5)
+            //             | (rd.to_word() << 9)
+            //             | (self.opcode() << 12),
+            //             shift_amount as u16
+            //         ]),
+            //         Operand::Register(..) | Operand::RegisterAndOffset(..) => Err(Error::ExpectedConstant(None)),
+            //     },
+            //     Operand::Imm(..) | Operand::RegisterAndOffset(..) => {
+            //         Err(Error::ExpectedRegister(None))
+            //     }
+            // },
             Self::Jmp(offset, invert_flags)
             | Self::Jz(offset, invert_flags)
             | Self::Jc(offset, invert_flags)
@@ -502,7 +531,9 @@ impl Context {
                 | Instruction::Or(op1, op2)
                 | Instruction::Xor(op1, op2)
                 | Instruction::Mul(op1, op2)
-                | Instruction::Cmp(op1, op2) => {
+                | Instruction::Cmp(op1, op2)
+                | Instruction::Shl(op1, op2)
+                | Instruction::Shr(op1, op2) => {
                     if let Operand::Register(reg1) = op1 {
                         if reg1 == prev_reg {
                             self.size += NOP.size();
@@ -589,6 +620,8 @@ impl Context {
                     | Instruction::Or(prev_op1, _)
                     | Instruction::Xor(prev_op1, _)
                     | Instruction::Not(prev_op1)
+                    | Instruction::Shl(prev_op1, _)
+                    | Instruction::Shr(prev_op1, _)
                     | Instruction::Mul(prev_op1, _)
                     | Instruction::Ld(prev_op1, _) => {
                         if let Operand::Register(prev_reg1) = prev_op1 {

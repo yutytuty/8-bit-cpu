@@ -30,6 +30,8 @@ begin
                  a xor b                  when func = T_XOR else
                  not a                    when func = T_NOT else
                  mult_result(15 downto 0) when func = T_NONE else
+                 std_logic_vector(shift_left(unsigned(a), to_integer(unsigned(b)))) when func = T_SHL else
+                 std_logic_vector(shift_right(unsigned(a), to_integer(unsigned(b)))) when func = T_SHR else
                  a;
 
   ZF <= '1' when result = x"00000000" else '0';

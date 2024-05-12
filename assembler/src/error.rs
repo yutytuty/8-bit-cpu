@@ -3,6 +3,7 @@ pub enum Error {
     UnknownRegister(Option<Box<Error>>, String),
     ExpectedConstantOrRegister(Option<Box<Error>>),
     ExpectedRegister(Option<Box<Error>>),
+    ExpectedConstant(Option<Box<Error>>),
     ExpectedOffsetOperator(Option<Box<Error>>),
     ExpectedAddress(Option<Box<Error>>),
     #[allow(dead_code)]
