@@ -5,7 +5,7 @@ library ieee;
 
 entity keyboard_buf is
   port (
-    ps2_clk, cpu_clk : in  std_logic;
+    cpu_clk : in  std_logic;
     read_addr        : in  std_logic_vector(7 downto 0);
     write_input      : in  std_logic_vector(7 downto 0);
     we               : in  std_logic;

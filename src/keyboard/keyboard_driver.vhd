@@ -38,7 +38,6 @@ architecture keyboard_driver_arch of keyboard_driver is
 begin
   buf: entity work.keyboard_buf
     port map (
-      ps2_clk     => inverted_ps2_clock, -- make writing happen on falling edge of cpu_clk
       cpu_clk     => clock_50,
       read_addr   => read_addr,
       write_input => shift_reg_sync_2(9 downto 2),
