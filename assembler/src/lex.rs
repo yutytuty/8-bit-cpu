@@ -123,9 +123,16 @@ impl Operand {
         if s.starts_with('(') {
             todo!()
         } else {
-            match s[1..].parse() {
-                Ok(num) => Ok(num),
-                Err(_) => Err(Error::CouldNotParseConstant(None, s.to_string())),
+            if s[1..].starts_with("0x") {
+                match i16::from_str_radix(&s[3..], 16) {
+                    Ok(num) => Ok(num),
+                    Err(_) => Err(Error::CouldNotParseConstant(None, s.to_string())),
+                }
+            } else {
+                match s[1..].parse() {
+                    Ok(num) => Ok(num),
+                    Err(_) => Err(Error::CouldNotParseConstant(None, s.to_string())),
+                }
             }
         }
     }
