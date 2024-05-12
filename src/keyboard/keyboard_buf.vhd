@@ -17,11 +17,20 @@ end entity;
 architecture keyboard_buf_arch of keyboard_buf is
   signal kb_buf_top : std_logic_vector(7 downto 0) := (others => '0');
 
-  signal internal_buf_top   : natural := 0;
-  signal internal_read_addr : natural := 0;
+  signal internal_buf_top   : integer := 0;
+  signal internal_buf_top_minus_1 : integer := 0;
+  signal internal_read_addr : integer := 0;
 begin
   internal_read_addr <= to_integer(unsigned(read_addr));
   internal_buf_top <= to_integer(unsigned(kb_buf_top));
+  process (internal_buf_top)
+  begin
+    if internal_buf_top /= 0 then
+      internal_buf_top_minus_1 <= internal_buf_top - 1;
+    else
+      internal_buf_top_minus_1 <= 0;
+    end if;
+  end process;
 
   mem: entity work.ram
     generic map (
@@ -32,7 +41,7 @@ begin
       rclk  => cpu_clk,
       wclk  => cpu_clk,
       raddr => internal_read_addr,
-      waddr => internal_buf_top - 1,
+      waddr => internal_buf_top_minus_1,
       input => write_input,
       we    => we,
       o     => read_o

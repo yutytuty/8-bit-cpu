@@ -20,7 +20,7 @@ entity ID_stage is
     reg2_sel_o               : out    natural range 0 to 7;
     operand_forward1         : out    std_logic;
     operand_forward2         : out    std_logic;
-    alu_func                 : out    natural range 0 to 7;
+    alu_func                 : out    natural range 0 to 9;
     -- outputs for MEM stage
     mem_instruction_o        : out    std_logic;
     -- outputs for WB stage

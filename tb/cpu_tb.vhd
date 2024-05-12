@@ -11,7 +11,10 @@ begin
     port map (
       clk           => clk,
       rst           => rst,
+      ps2_in        => '0',
+      ps2_clk       => '0',
       debug_reg_sel => 0,
+      word_selector => '0',
       debug_o       => open
     );
 

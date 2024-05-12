@@ -15,7 +15,7 @@ entity EX_stage is
     operand_forward_in     : in  std_logic_vector(15 downto 0);
     operand_forward1       : in  std_logic;
     operand_forward2       : in  std_logic;
-    func                   : in  natural range 0 to 7;
+    func                   : in  natural range 0 to 9;
     mem_instruction        : in  std_logic;
     wb_reg                 : in  natural range 0 to 7;
     wb_we                  : in  std_logic;
