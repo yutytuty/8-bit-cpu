@@ -43,14 +43,20 @@ architecture MEM_stage_arch of MEM_stage is
   signal internal_addr : natural   := 0;
 
   signal keyboard_offset : std_logic_vector(15 downto 0); -- addr - keyboard_start
-
 begin
   mem_clk         <= not clk;
   internal_we     <= we and mem_instruction;
   internal_addr   <= to_integer(unsigned(address(13 downto 0)));
   keyboard_offset <= address - KEYBOARD_START;
 
-  kbd_driver_raddr <= keyboard_offset(7 downto 0);
+  process (keyboard_offset)
+  begin
+    if address >= KEYBOARD_START and address < KEYBOARD_END then
+      kbd_driver_raddr <= keyboard_offset(7 downto 0);
+    else
+      kbd_driver_raddr <= (others => '0');
+    end if;
+  end process;
 
   mem: entity work.ram
     port map (

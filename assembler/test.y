@@ -1,7 +1,12 @@
 jmp @_start
 _start:
-  mov %ar, $28255
-  mov %cr, $0
+  ; top_ptr = [28255]
+  mov %ar, $5
+  mov %br, $28256 ; br=buf[0]
 loop:
-  ld %cr, %ar ; load [ar] into cr
+  ld %cr, $28255 ; cr=top_ptr
+  cmp %cr, %br
+  jz @loop
+  ld %ar, %br
+  add %br, $1
   jmp @loop

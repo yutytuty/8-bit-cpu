@@ -17,7 +17,7 @@ architecture top_arch of top is
   signal rst : std_logic;
 
   -- frequency splitter
-  constant COUNT_MAX : natural := 50000000 / 5000000;
+  constant COUNT_MAX : natural := 50000000;
   signal counter : natural range 0 to COUNT_MAX := 0;
   signal clk     : std_logic                    := '1';
 begin
@@ -45,6 +45,7 @@ begin
       ps2_in        => ps2_dat,
       ps2_clk       => ps2_clk,
       debug_reg_sel => to_integer(unsigned(sw(2 downto 0))),
+      word_selector => sw(3),
       debug_o       => led
     );
 end architecture;

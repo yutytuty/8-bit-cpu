@@ -41,7 +41,7 @@ begin
       ps2_clk     => inverted_ps2_clock, -- make writing happen on falling edge of cpu_clk
       cpu_clk     => clock_50,
       read_addr   => read_addr,
-      write_input => shift_reg_sync_2(7 downto 0),
+      write_input => shift_reg_sync_2(9 downto 2),
       we          => we_buf,
       top_ptr     => buf_top_ptr,
       read_o      => read_o

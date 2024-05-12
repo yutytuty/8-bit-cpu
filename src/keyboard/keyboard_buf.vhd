@@ -30,17 +30,17 @@ begin
     )
     port map (
       rclk  => cpu_clk,
-      wclk  => ps2_clk,
+      wclk  => cpu_clk,
       raddr => internal_read_addr,
-      waddr => internal_buf_top,
+      waddr => internal_buf_top - 1,
       input => write_input,
       we    => we,
       o     => read_o
     );
 
-  process (ps2_clk)
+  process (cpu_clk)
   begin
-    if falling_edge(ps2_clk) then
+    if falling_edge(cpu_clk) then
       if we = '1' then
         kb_buf_top <= kb_buf_top + 1;
       end if;
