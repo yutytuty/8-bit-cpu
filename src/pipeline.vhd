@@ -6,16 +6,22 @@ library work;
 
 entity pipeline is
   port (
-    clk           : in  std_logic;
-    pc            : in  std_logic_vector(15 downto 0);
-    reg1          : in  std_logic_vector(15 downto 0);
-    reg2          : in  std_logic_vector(15 downto 0);
-    reg1_sel      : out natural range 0 to 7          := 0;
-    reg2_sel      : out natural range 0 to 7          := 0;
-    reg_write_sel : out natural range 0 to 7          := 0;
-    reg_we        : out std_logic                     := '0';
-    reg_input     : out std_logic_vector(15 downto 0) := (others => '0');
-    next_pc       : out std_logic_vector(15 downto 0) := (others => '0'));
+    clk                : in  std_logic;
+    pc                 : in  std_logic_vector(15 downto 0);
+    -- keyboard --
+    kbd_driver_o       : in  std_logic_vector(7 downto 0);
+    kbd_buf_top_offset : in  std_logic_vector(7 downto 0);
+    kbd_driver_raddr   : out std_logic_vector(7 downto 0);
+    -- register file --
+    reg1               : in  std_logic_vector(15 downto 0);
+    reg2               : in  std_logic_vector(15 downto 0);
+    reg1_sel           : out natural range 0 to 7          := 0;
+    reg2_sel           : out natural range 0 to 7          := 0;
+    reg_write_sel      : out natural range 0 to 7          := 0;
+    reg_we             : out std_logic                     := '0';
+    reg_input          : out std_logic_vector(15 downto 0) := (others => '0');
+    next_pc            : out std_logic_vector(15 downto 0) := (others => '0')
+  );
 end entity;
 
 architecture pipeline_arch of pipeline is
@@ -111,16 +117,19 @@ begin
 
   c_MEM_stage: entity work.MEM_stage
     port map (
-      clk             => clk,
-      mem_instruction => ex_mem_instruction,
-      we              => ex_wb_we,
-      data_in         => ex_mem_data_in,
-      address         => ex_out,
-      wb_reg          => ex_wb_reg,
-      wb_we           => ex_wb_we,
-      wb_reg_o        => mem_wb_reg,
-      wb_we_o         => mem_wb_we,
-      o               => mem_out
+      clk                => clk,
+      mem_instruction    => ex_mem_instruction,
+      we                 => ex_wb_we,
+      data_in            => ex_mem_data_in,
+      address            => ex_out,
+      wb_reg             => ex_wb_reg,
+      wb_we              => ex_wb_we,
+      kbd_driver_out     => kbd_driver_o,
+      kbd_buf_top_offset => kbd_buf_top_offset,
+      kbd_driver_raddr   => kbd_driver_raddr,
+      wb_reg_o           => mem_wb_reg,
+      wb_we_o            => mem_wb_we,
+      o                  => mem_out
     );
 
   c_WB_stage: entity work.WB_stage

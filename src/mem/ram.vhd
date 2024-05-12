@@ -9,11 +9,11 @@ entity ram is
   );
 
   port (
-    clk   : in  std_logic;
-    addr  : in  natural range 0 to 2 ** ADDR_WIDTH - 1;
-    input : in  std_logic_vector((DATA_WIDTH - 1) downto 0);
-    we    : in  std_logic := '1';
-    o     : out std_logic_vector((DATA_WIDTH - 1) downto 0)
+    rclk, wclk   : in  std_logic;
+    raddr, waddr : in  natural range 0 to 2 ** ADDR_WIDTH - 1;
+    input        : in  std_logic_vector((DATA_WIDTH - 1) downto 0);
+    we           : in  std_logic := '1';
+    o            : out std_logic_vector((DATA_WIDTH - 1) downto 0)
   );
 end entity;
 
@@ -27,24 +27,20 @@ architecture rtl of ram is
   signal mem : memory_t := (
     others => (others => '0')
   );
-
-  -- Register to hold the address 
-  signal addr_reg : natural range 0 to 2 ** ADDR_WIDTH - 1;
-
 begin
-
-  process (clk)
+  process (wclk)
   begin
-    if (rising_edge(clk)) then
+    if (rising_edge(wclk)) then
       if (we = '1') then
-        mem(addr) <= input;
+        mem(waddr) <= input;
       end if;
-
-      -- Register the address for reading
-      addr_reg <= addr;
     end if;
   end process;
 
-  o <= mem(addr_reg);
-
+  process (rclk)
+  begin
+    if rising_edge(rclk) then
+      o <= mem(raddr);
+    end if;
+  end process;
 end architecture;

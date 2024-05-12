@@ -5,26 +5,19 @@ library ieee;
 
 entity top is
   port (
-    clk_50 : in  std_logic;
-    key0   : in  std_logic;
-    key1   : in  std_logic;
-    sw     : in  std_logic_vector(3 downto 0);
-    led    : out std_logic_vector(7 downto 0));
+    clk_50  : in  std_logic;
+    ps2_clk : in  std_logic;
+    ps2_dat : in  std_logic;
+    key0    : in  std_logic;
+    sw      : in  std_logic_vector(3 downto 0);
+    led     : out std_logic_vector(7 downto 0));
 end entity;
 
 architecture top_arch of top is
-  component cpu is
-    port (
-      clk           : in  std_logic;
-      rst           : in  std_logic;
-      debug_reg_sel : in  natural range 0 to 7;
-      debug_o       : out std_logic_vector(7 downto 0));
-  end component;
-
   signal rst : std_logic;
 
   -- frequency splitter
-  constant COUNT_MAX : natural := 50000000 / 10; -- 10hz
+  constant COUNT_MAX : natural := 50000000 / 5000000;
   signal counter : natural range 0 to COUNT_MAX := 0;
   signal clk     : std_logic                    := '1';
 begin
@@ -45,10 +38,12 @@ begin
     end if;
   end process;
 
-  c_CPU: cpu
+  c_CPU: entity work.cpu
     port map (
-      clk           => clk,
+      clk           => clk_50,
       rst           => rst,
+      ps2_in        => ps2_dat,
+      ps2_clk       => ps2_clk,
       debug_reg_sel => to_integer(unsigned(sw(2 downto 0))),
       debug_o       => led
     );

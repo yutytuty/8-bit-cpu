@@ -20,7 +20,7 @@ architecture program_mem_arch of program_mem is
 
   signal mem : mem_t;
   attribute ram_init_file : string;
-  attribute ram_init_file of mem : signal is "sort.mif";
+  attribute ram_init_file of mem : signal is "prog.mif";
 
 begin
   process (clk)
