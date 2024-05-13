@@ -49,7 +49,7 @@ begin
   internal_addr   <= to_integer(unsigned(address(13 downto 0)));
   keyboard_offset <= address - KEYBOARD_START;
 
-  process (keyboard_offset)
+  process (keyboard_offset, address)
   begin
     if address >= KEYBOARD_START and address < KEYBOARD_END then
       kbd_driver_raddr <= keyboard_offset(7 downto 0);

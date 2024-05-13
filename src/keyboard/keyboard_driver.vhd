@@ -35,6 +35,8 @@ architecture keyboard_driver_arch of keyboard_driver is
   signal counter_sync_1 : natural := 0;
   signal counter_sync_2 : natural := 0;
 
+  signal done_write : std_logic := '0';
+
 begin
   buf: entity work.keyboard_buf
     port map (
@@ -77,10 +79,18 @@ begin
       counter_sync_2 <= counter_sync_1;
       shift_reg_sync_1 <= shift_reg;
       shift_reg_sync_2 <= shift_reg_sync_1;
-      if counter_sync_2 >= 10 then
+      if counter_sync_2 >= 10 and done_write = '0' then
         we_buf <= '1';
-      else
+        done_write <= '1';
+      elsif counter_sync_2 < 10 and done_write = '1' then
         we_buf <= '0';
+        done_write <= '0';
+      elsif counter_sync_2 >= 10 and done_write = '1' then
+        we_buf <= '0';
+        done_write <= '1';
+      else -- counter sync_2 < 10 and done_write = '0'
+        we_buf <= '0';
+        done_write <= '0';
       end if;
     end if;
   end process;

@@ -79,4 +79,5 @@ begin
 
   debug_o <= reg_file_debug_o(15 downto 8) when word_selector = '1' else
              reg_file_debug_o(7 downto 0);
+  -- debug_o <= kbd_buf_top_offset;
 end architecture;
