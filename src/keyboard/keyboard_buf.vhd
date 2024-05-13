@@ -47,5 +47,5 @@ begin
     end if;
   end process;
 
-  top_ptr <= kb_buf_top;
+  top_ptr <= kb_buf_top + 1;
 end architecture;
